@@ -43,7 +43,6 @@ def translate_food_names(df):
         raise Exception(f"Error in translation: {e}")   
 
 
-
 PANTRY_ITEMS = [
     # Basic staples
     "rice", "potato", "onion", "pepper", "salt",
