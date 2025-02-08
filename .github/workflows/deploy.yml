@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]  # or master
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -27,70 +27,85 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Set environment variables
+        run: |
+          echo "REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ github.sha }}" >> $GITHUB_ENV
+          echo "FRONTEND_URL=http://${{ secrets.EC2_HOST }}" >> $GITHUB_ENV
+          echo "BACKEND_URL=http://${{ secrets.EC2_HOST }}:8000" >> $GITHUB_ENV
+
       - name: Build and push Docker images
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-          # API Keys
+          ECR_REGISTRY: ${{ env.REGISTRY }}
+          ECR_REPOSITORY: rohlik-app
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
           AGENTQL_API_KEY: ${{ secrets.AGENTQL_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SGAI_API_KEY: ${{ secrets.SGAI_API_KEY }}
           SPOONACULAR_API_KEY: ${{ secrets.SPOONACULAR_API_KEY }}
-          
-          # Database
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
-          
-          # URLs
-          FRONTEND_URL: http://${{ secrets.EC2_HOST }}
-          BACKEND_URL: http://${{ secrets.EC2_HOST }}:8000
-          ALLOWED_ORIGINS: http://${{ secrets.EC2_HOST }}
-          REACT_APP_API_URL: http://${{ secrets.EC2_HOST }}:8000
-          
-          # AWS/ECR
-          ECR_REPOSITORY: rohlik-app
+          ALLOWED_ORIGINS: ${{ env.FRONTEND_URL }}
+          REACT_APP_API_URL: ${{ env.BACKEND_URL }}
         run: |
-          docker-compose build
-          docker-compose push
+          # Build backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG
+          
+          # Build frontend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG ./frontend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          ECR_REGISTRY: ${{ env.REGISTRY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: |
-            GITHUB_SHA,ECR_REGISTRY,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,OPENAI_API_KEY,AGENTQL_API_KEY,SGAI_API_KEY,SPOONACULAR_API_KEY,ALLOWED_ORIGINS,REACT_APP_API_URL,BACKEND_URL
+          envs: GITHUB_SHA,ECR_REGISTRY
           script: |
-            # Create app directory if it doesn't exist
             mkdir -p ~/app
             
-            # Copy docker-compose.yml to EC2
-            cat > ~/app/docker-compose.yml << 'EOL'
+            # Create .env file
+            cat > ~/app/.env << EOL
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            AGENTQL_API_KEY=${{ secrets.AGENTQL_API_KEY }}
+            SGAI_API_KEY=${{ secrets.SGAI_API_KEY }}
+            SPOONACULAR_API_KEY=${{ secrets.SPOONACULAR_API_KEY }}
+            ALLOWED_ORIGINS=http://${{ secrets.EC2_HOST }}
+            REACT_APP_API_URL=http://${{ secrets.EC2_HOST }}:8000
+            BACKEND_URL=http://${{ secrets.EC2_HOST }}:8000
+            EOL
+            
+            # Create docker-compose.yml
+            cat > ~/app/docker-compose.yml << EOL
             version: '3.8'
+            
             services:
               backend:
                 image: ${ECR_REGISTRY}/rohlik-app:backend-${GITHUB_SHA}
                 ports:
                   - "8000:8000"
-                environment:
-                  - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-                  - OPENAI_API_KEY=${OPENAI_API_KEY}
-                  - AGENTQL_API_KEY=${AGENTQL_API_KEY}
-                  - SGAI_API_KEY=${SGAI_API_KEY}
-                  - SPOONACULAR_API_KEY=${SPOONACULAR_API_KEY}
-                  - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+                env_file:
+                  - .env
               
               frontend:
                 image: ${ECR_REGISTRY}/rohlik-app:frontend-${GITHUB_SHA}
                 ports:
                   - "80:80"
-                environment:
-                  - REACT_APP_API_URL=${REACT_APP_API_URL}
-                  - BACKEND_URL=${BACKEND_URL}
+                env_file:
+                  - .env
             EOL
             
             # Login to ECR
