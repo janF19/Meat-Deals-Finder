@@ -63,35 +63,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: |
-            GITHUB_SHA
-            DB_USER
-            DB_PASSWORD
-            DB_HOST
-            DB_PORT
-            DB_NAME
-            OPENAI_API_KEY
-            AGENTQL_API_KEY
-            SGAI_API_KEY
-            SPOONACULAR_API_KEY
-            ALLOWED_ORIGINS
-            REACT_APP_API_URL
-            BACKEND_URL
-            ECR_REGISTRY
-          environment: |
-            GITHUB_SHA=${{ github.sha }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            AGENTQL_API_KEY=${{ secrets.AGENTQL_API_KEY }}
-            SGAI_API_KEY=${{ secrets.SGAI_API_KEY }}
-            SPOONACULAR_API_KEY=${{ secrets.SPOONACULAR_API_KEY }}
-            ALLOWED_ORIGINS=http://${{ secrets.EC2_HOST }}
-            REACT_APP_API_URL=http://${{ secrets.EC2_HOST }}:8000
-            BACKEND_URL=http://${{ secrets.EC2_HOST }}:8000
-            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+            GITHUB_SHA,ECR_REGISTRY,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,OPENAI_API_KEY,AGENTQL_API_KEY,SGAI_API_KEY,SPOONACULAR_API_KEY,ALLOWED_ORIGINS,REACT_APP_API_URL,BACKEND_URL
           script: |
             # Create app directory if it doesn't exist
             mkdir -p ~/app
