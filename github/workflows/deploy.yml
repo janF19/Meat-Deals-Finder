@@ -1,0 +1,63 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]  # or master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          # API Keys
+          AGENTQL_API_KEY: ${{ secrets.AGENTQL_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SGAI_API_KEY: ${{ secrets.SGAI_API_KEY }}
+          SPOONACULAR_API_KEY: ${{ secrets.SPOONACULAR_API_KEY }}
+          
+          # Database
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          
+          # URLs
+          FRONTEND_URL: http://${{ secrets.EC2_HOST }}
+          BACKEND_URL: http://${{ secrets.EC2_HOST }}:8000
+          ALLOWED_ORIGINS: http://${{ secrets.EC2_HOST }}
+          REACT_APP_API_URL: http://${{ secrets.EC2_HOST }}:8000
+          
+          # AWS/ECR
+          ECR_REPOSITORY: rohlik-app
+        run: |
+          docker-compose build
+          docker-compose push
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/app
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker-compose pull
+            docker-compose up -d

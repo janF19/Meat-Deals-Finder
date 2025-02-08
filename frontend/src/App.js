@@ -14,6 +14,9 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+// Add this near the top of the file
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 function App() {
   const [products, setProducts] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -23,12 +26,11 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch only available products
-        const productsResponse = await axios.get('http://localhost:8000/api/v1/products?available_only=true');
+        // Updated URLs to use environment variable
+        const productsResponse = await axios.get(`${API_URL}/api/v1/products?available_only=true`);
         setProducts(productsResponse.data);
 
-        // Fetch recipes
-        const recipesResponse = await axios.get('http://localhost:8000/api/v1/recipes');
+        const recipesResponse = await axios.get(`${API_URL}/api/v1/recipes`);
         setRecipes(recipesResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -42,7 +44,7 @@ function App() {
   useEffect(() => {
     const fetchFilteredRecipes = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/v1/recipes?product_name=${recipeFilter}`);
+        const response = await axios.get(`${API_URL}/api/v1/recipes?product_name=${recipeFilter}`);
         setRecipes(response.data);
       } catch (error) {
         console.error('Error fetching filtered recipes:', error);

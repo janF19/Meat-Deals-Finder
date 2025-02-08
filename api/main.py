@@ -1,8 +1,7 @@
-
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import products, recipes
+import os
 
 app = FastAPI(
     title="Rohlik API",
@@ -10,10 +9,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Get allowed origins from environment variable or use default
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
+# Configure CORS with environment variables
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=ALLOWED_ORIGINS,  # Now configurable via environment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

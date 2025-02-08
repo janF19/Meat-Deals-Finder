@@ -3,4 +3,8 @@
 .env
 poetry.lock
 pyproject.toml
+checkData.ipynb
 
+.env
+.env.*
+!.env.example
