@@ -62,6 +62,36 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: |
+            GITHUB_SHA
+            DB_USER
+            DB_PASSWORD
+            DB_HOST
+            DB_PORT
+            DB_NAME
+            OPENAI_API_KEY
+            AGENTQL_API_KEY
+            SGAI_API_KEY
+            SPOONACULAR_API_KEY
+            ALLOWED_ORIGINS
+            REACT_APP_API_URL
+            BACKEND_URL
+            ECR_REGISTRY
+          environment: |
+            GITHUB_SHA=${{ github.sha }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            AGENTQL_API_KEY=${{ secrets.AGENTQL_API_KEY }}
+            SGAI_API_KEY=${{ secrets.SGAI_API_KEY }}
+            SPOONACULAR_API_KEY=${{ secrets.SPOONACULAR_API_KEY }}
+            ALLOWED_ORIGINS=http://${{ secrets.EC2_HOST }}
+            REACT_APP_API_URL=http://${{ secrets.EC2_HOST }}:8000
+            BACKEND_URL=http://${{ secrets.EC2_HOST }}:8000
+            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
           script: |
             # Create app directory if it doesn't exist
             mkdir -p ~/app
@@ -71,7 +101,7 @@ jobs:
             version: '3.8'
             services:
               backend:
-                image: ${{ steps.login-ecr.outputs.registry }}/rohlik-app:backend-${GITHUB_SHA}
+                image: ${ECR_REGISTRY}/rohlik-app:backend-${GITHUB_SHA}
                 ports:
                   - "8000:8000"
                 environment:
@@ -83,7 +113,7 @@ jobs:
                   - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
               
               frontend:
-                image: ${{ steps.login-ecr.outputs.registry }}/rohlik-app:frontend-${GITHUB_SHA}
+                image: ${ECR_REGISTRY}/rohlik-app:frontend-${GITHUB_SHA}
                 ports:
                   - "80:80"
                 environment:
@@ -92,7 +122,7 @@ jobs:
             EOL
             
             # Login to ECR
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
             
             # Pull and run containers
             cd ~/app
