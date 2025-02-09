@@ -1,24 +1,28 @@
-# Create docker-compose.yml
-
-version: '3.8'
-
 services:
   backend:
-    image: ${ECR_REGISTRY}/rohlik-app:backend-${GITHUB_SHA}
+    container_name: backend
+    image: 221082215561.dkr.ecr.us-east-1.amazonaws.com/rohlik-app:backend-d93135273cf25f1060bab4574122de49148d22d2
     ports:
       - "8000:8000"
     env_file:
       - .env
-    environment:
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    networks:
+      - app-network
     restart: unless-stopped
 
   frontend:
-    image: ${ECR_REGISTRY}/rohlik-app:frontend-${GITHUB_SHA}
+    container_name: frontend
+    image: 221082215561.dkr.ecr.us-east-1.amazonaws.com/rohlik-app:frontend-d93135273cf25f1060bab4574122de49148d22d2
     ports:
       - "80:80"
     env_file:
       - .env
     depends_on:
       - backend
+    networks:
+      - app-network
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

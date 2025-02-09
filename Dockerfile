@@ -33,5 +33,6 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-# Change the CMD to use the full path to uvicorn
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Change the CMD to use python -m to ensure uvicorn is in PATH
+CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
