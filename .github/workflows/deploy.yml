@@ -72,46 +72,36 @@ jobs:
           script: |
             mkdir -p ~/app
             
-            # Create .env file
+            # Create .env file with explicit exports
             cat > ~/app/.env << EOL
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            AGENTQL_API_KEY=${{ secrets.AGENTQL_API_KEY }}
-            SGAI_API_KEY=${{ secrets.SGAI_API_KEY }}
-            SPOONACULAR_API_KEY=${{ secrets.SPOONACULAR_API_KEY }}
-            ALLOWED_ORIGINS=http://${{ secrets.EC2_HOST }}
-            REACT_APP_API_URL=http://${{ secrets.EC2_HOST }}:8000
-            BACKEND_URL=http://${{ secrets.EC2_HOST }}:8000
+            export DB_USER='${{ secrets.DB_USER }}'
+            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+            export DB_HOST='${{ secrets.DB_HOST }}'
+            export DB_PORT='${{ secrets.DB_PORT }}'
+            export DB_NAME='${{ secrets.DB_NAME }}'
+            export OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}'
+            export AGENTQL_API_KEY='${{ secrets.AGENTQL_API_KEY }}'
+            export SGAI_API_KEY='${{ secrets.SGAI_API_KEY }}'
+            export SPOONACULAR_API_KEY='${{ secrets.SPOONACULAR_API_KEY }}'
+            export ALLOWED_ORIGINS='http://${{ secrets.EC2_HOST }}'
+            export REACT_APP_API_URL='http://${{ secrets.EC2_HOST }}:8000'
+            export BACKEND_URL='http://${{ secrets.EC2_HOST }}:8000'
             EOL
             
-            # Create docker-compose.yml
-            cat > ~/app/docker-compose.yml << EOL
-            version: '3.8'
+            # Set proper permissions
+            chmod 600 ~/app/.env
             
-            services:
-              backend:
-                image: ${ECR_REGISTRY}/rohlik-app:backend-${GITHUB_SHA}
-                ports:
-                  - "8000:8000"
-                env_file:
-                  - .env
-              
-              frontend:
-                image: ${ECR_REGISTRY}/rohlik-app:frontend-${GITHUB_SHA}
-                ports:
-                  - "80:80"
-                env_file:
-                  - .env
-            EOL
+            cd ~/app
+            
+            # Stop and remove existing containers
+            docker-compose down
             
             # Login to ECR
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
             
             # Pull and run containers
-            cd ~/app
             docker-compose pull
             docker-compose up -d
+            
+            # Check container logs for debugging
+            docker-compose logs

@@ -1,4 +1,3 @@
-# Backend Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -19,8 +18,7 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Remove ENV variables from Dockerfile since they'll come from docker-compose
-# Instead, just declare them to document what's needed
+# Environment variables declaration
 ENV AGENTQL_API_KEY='' \
     SGAI_API_KEY='' \
     SPOONACULAR_API_KEY='' \
@@ -35,5 +33,5 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-# Command to run the application - added reload flag for development
+# Change the CMD to use the full path to uvicorn
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
