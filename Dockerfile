@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Add the root directory to PYTHONPATH
+ENV PYTHONPATH=/app
+
 # Expose the port the app runs on
 EXPOSE 8000
 
@@ -35,4 +38,4 @@ ENV AGENTQL_API_KEY='' \
     REACT_APP_API_URL=''
 
 # Change to use python to run server.py instead of uvicorn directly
-CMD ["python", "-u", "server.py"]
+CMD ["python", "-u", "api/main.py"]
