@@ -10,7 +10,6 @@ services:
       - app-network
     restart: unless-stopped
 
-
   frontend:
     container_name: frontend
     image: 221082215561.dkr.ecr.us-east-1.amazonaws.com/rohlik-app:frontend-d93135273cf25f1060bab4574122de49148d22d2
