@@ -33,6 +33,5 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-
-# Change the CMD to point to the correct module
-CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Change to use python to run server.py directly
+CMD ["python", "server.py"]
