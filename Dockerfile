@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -34,5 +34,5 @@ ENV AGENTQL_API_KEY='' \
     REACT_APP_API_URL=''
 
 
-# Change the CMD to use python -m to ensure uvicorn is in PATH
+# Change the CMD to point to the correct module
 CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
