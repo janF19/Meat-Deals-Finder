@@ -82,6 +82,7 @@ class DatabaseManager:
                 
                 conn.commit()
 
+
     def update_recipes(self, df):
         """
         Replaces all records in the recipes table with new data

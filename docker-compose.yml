@@ -9,7 +9,7 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-    command: ["python", "server.py"]
+
 
   frontend:
     container_name: frontend
