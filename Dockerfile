@@ -34,5 +34,5 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-# Change to use python -m uvicorn to ensure it's run as a module
-CMD ["python", "server.py"]
+# Change to use python to run server.py instead of uvicorn directly
+CMD ["python", "-u", "server.py"]
