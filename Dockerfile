@@ -1,8 +1,9 @@
+# Dockerfile
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies including curl for healthcheck
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -19,10 +20,10 @@ COPY . .
 # Add the root directory to PYTHONPATH
 ENV PYTHONPATH=/app
 
-# Expose the port the app runs on
+# Expose the port
 EXPOSE 8000
 
-# Environment variables declaration
+# Environment variables
 ENV AGENTQL_API_KEY='' \
     SGAI_API_KEY='' \
     SPOONACULAR_API_KEY='' \
@@ -37,5 +38,5 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-# Change to use python to run server.py instead of uvicorn directly
-CMD ["python", "-u", "api/main.py"]
+# Important: Use the full path to uvicorn executable
+CMD ["/usr/local/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

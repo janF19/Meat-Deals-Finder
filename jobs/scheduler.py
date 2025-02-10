@@ -1,7 +1,3 @@
-
-
-
-
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from jobs.tasks import scrape_products, generate_recipes
@@ -24,5 +20,8 @@ def init_scheduler():
         id='generate_recipes',
         name='Generate recipes'
     )
+    
+    # Start the scheduler
+    scheduler.start()
     
     return scheduler
