@@ -51,13 +51,15 @@ jobs:
           ALLOWED_ORIGINS: ${{ env.FRONTEND_URL }}
           REACT_APP_API_URL: ${{ env.BACKEND_URL }}
         run: |
-          # Build backend
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG -f Dockerfile .
+          # Build and push backend with both specific and latest tags
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-latest -f Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-latest
           
-          # Build frontend
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG -f frontend/Dockerfile ./frontend
+          # Build and push frontend with both specific and latest tags
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest -f frontend/Dockerfile ./frontend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
