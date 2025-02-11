@@ -1,11 +1,14 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from jobs.tasks import scrape_products, generate_recipes
+import logging
 
 def init_scheduler():
+    logging.getLogger('apscheduler').setLevel(logging.DEBUG)  # More detailed logs
     scheduler = BackgroundScheduler()
     
-    # Schedule product scraping every 6 hours
+    # Add print statements
+    print("Scheduling scraping job...")
     scheduler.add_job(
         scrape_products,
         trigger=CronTrigger(hour='*/6'),
@@ -13,7 +16,7 @@ def init_scheduler():
         name='Scrape Rohlik products'
     )
     
-    # Schedule recipe generation 15 minutes after each scraping
+    print("Scheduling recipe job...")
     scheduler.add_job(
         generate_recipes,
         trigger=CronTrigger(hour='*/6', minute='15'),
@@ -21,7 +24,6 @@ def init_scheduler():
         name='Generate recipes'
     )
     
-    # Start the scheduler
     scheduler.start()
-    
+    print("Scheduler started with jobs:", scheduler.get_jobs())
     return scheduler

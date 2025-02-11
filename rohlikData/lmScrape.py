@@ -89,7 +89,9 @@ def process_weight(weight_str):
 
 def main():
     try:
+        print("Starting scraping process...")  # Add debug prints
         with sync_playwright() as playwright, playwright.chromium.launch(headless=True) as browser:
+            print("Browser launched...")
             # Create browser context and wrap with AgentQL
             page = agentql.wrap(browser.new_page())
 
@@ -143,6 +145,9 @@ def main():
 
     except Exception as e:
         print(f"Scraping operation failed: {str(e)}")
+        import traceback
+        traceback.print_exc()  # Print full stack trace
+        raise  # Re-raise the exception to be caught by the scheduler
 
 if __name__ == "__main__":
     main()
