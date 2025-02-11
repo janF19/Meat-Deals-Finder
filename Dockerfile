@@ -1,4 +1,3 @@
-# Dockerfile
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -12,7 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install requirements with pip and ensure executables are in PATH
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir fastapi uvicorn
+
+RUN pip install --no-cache-dir "uvicorn[standard]" && \
+which uvicorn
 
 # Copy the rest of the application
 COPY . .
@@ -38,5 +43,7 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL=''
 
-# Important: Use the full path to uvicorn executable
-CMD ["/usr/local/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn with python -m to ensure proper module resolution
+
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

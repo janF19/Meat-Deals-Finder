@@ -7,3 +7,4 @@ checkData.ipynb
 .env
 .env.*
 !.env.example
+tree.py
