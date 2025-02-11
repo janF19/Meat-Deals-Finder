@@ -1,6 +1,7 @@
 import logging
 from rohlikData.lmScrape import main as scrape_main
 from generateRec import main as recipe_main
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -13,6 +14,8 @@ def scrape_products():
         logger.info("Product scraping completed successfully")
     except Exception as e:
         logger.error(f"Error during product scraping: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(traceback.format_exc())
 
 def generate_recipes():
     try:
