@@ -2,20 +2,20 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from jobs.tasks import scrape_products, generate_recipes
 import logging
+from datetime import datetime
 
 def init_scheduler():
     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
     scheduler = BackgroundScheduler()
     
     print("Scheduling scraping job...")
-    # Run every hour instead of every 6 hours for testing
     scheduler.add_job(
         scrape_products,
-        trigger=CronTrigger(minute='*/10'),  # Run every minute for testing
+        trigger=CronTrigger(minute='*/1'),  # Run every minute for immediate testing
         id='scrape_products',
         name='Scrape Rohlik products',
         max_instances=1,
-        coalesce=True  # Combine missed runs
+        coalesce=True
     )
     
     print("Scheduling recipe job...")
@@ -31,8 +31,8 @@ def init_scheduler():
     scheduler.start()
     print("Scheduler started with jobs:", scheduler.get_jobs())
     
-    # Force run jobs immediately for testing
-    scheduler.get_job('scrape_products').modify(next_run_time=None)
-    scheduler.get_job('generate_recipes').modify(next_run_time=None)
+    # Force immediate execution
+    print("Forcing immediate job execution...")
+    scheduler.get_job('scrape_products').modify(next_run_time=datetime.now())
     
     return scheduler

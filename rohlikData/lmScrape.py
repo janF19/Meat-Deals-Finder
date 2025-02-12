@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import re
 import sys
 import pandas as pd 
+import traceback
 
 # Add parent directory to Python path (place this before the import)
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -89,15 +90,20 @@ def process_weight(weight_str):
 
 def main():
     try:
-        print("Starting scraping process...")  # Add debug prints
-        with sync_playwright() as playwright, playwright.chromium.launch(headless=True) as browser:
+        print("Starting scraping process...")
+        # Test if we can even launch browser
+        with sync_playwright() as playwright:
+            print("Playwright initialized...")
+            browser = playwright.chromium.launch(headless=True)
             print("Browser launched...")
-            # Create browser context and wrap with AgentQL
-            page = agentql.wrap(browser.new_page())
-
-            # Navigate directly to products page
+            page = browser.new_page()
+            print("Page created...")
+            
+            # Test basic navigation
+            print(f"Navigating to {PRODUCTS_URL}...")
             page.goto(PRODUCTS_URL)
-
+            print("Navigation successful...")
+            
             # Handle cookies on the products page
             cookie_response = page.query_elements(COOKIE_QUERY)
             if cookie_response.cookies_form.reject_btn is not None:
@@ -144,10 +150,9 @@ def main():
                 print(f"Database operation failed: {str(e)}")
 
     except Exception as e:
-        print(f"Scraping operation failed: {str(e)}")
-        import traceback
-        traceback.print_exc()  # Print full stack trace
-        raise  # Re-raise the exception to be caught by the scheduler
+        print(f"ERROR in main(): {str(e)}")
+        traceback.print_exc()
+        raise
 
 if __name__ == "__main__":
     main()

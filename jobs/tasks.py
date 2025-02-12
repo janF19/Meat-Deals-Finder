@@ -2,20 +2,21 @@ import logging
 from rohlikData.lmScrape import main as scrape_main
 from generateRec import main as recipe_main
 import os
+import traceback
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def scrape_products():
     try:
-        logger.info("Starting product scraping...")
-        logger.debug("Initializing scrape_main...")
+        print("Starting scrape_products task...")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Environment variables: {os.environ}")
         scrape_main()
-        logger.info("Product scraping completed successfully")
+        print("Scrape_products task completed")
     except Exception as e:
-        logger.error(f"Error during product scraping: {str(e)}", exc_info=True)
-        import traceback
-        logger.error(traceback.format_exc())
+        print(f"ERROR in scrape_products: {str(e)}")
+        traceback.print_exc()
 
 def generate_recipes():
     try:
