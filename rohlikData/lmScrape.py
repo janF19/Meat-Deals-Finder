@@ -91,25 +91,24 @@ def process_weight(weight_str):
 def main():
     try:
         print("Starting scraping process...")
-        # Test if we can even launch browser
         with sync_playwright() as playwright:
-            print("Playwright initialized...")
             browser = playwright.chromium.launch(headless=True)
-            print("Browser launched...")
             page = browser.new_page()
-            print("Page created...")
             
-            # Test basic navigation
             print(f"Navigating to {PRODUCTS_URL}...")
             page.goto(PRODUCTS_URL)
-            print("Navigation successful...")
             
-            # Handle cookies on the products page
-            cookie_response = page.query_elements(COOKIE_QUERY)
-            if cookie_response.cookies_form.reject_btn is not None:
-                cookie_response.cookies_form.reject_btn.click()
-
-            # Extract product data after handling cookies
+            # Handle cookies if they appear
+            try:
+                # Look for the cookie reject button
+                reject_button = page.locator('[data-test="CookiesDialog-decline"]')
+                if reject_button.is_visible(timeout=5000):  # 5 seconds timeout
+                    reject_button.click()
+                    print("Cookie banner handled")
+            except Exception as e:
+                print("No cookie banner found or already accepted")
+            
+            # Rest of your scraping code...
             product_response = page.query_data(PRODUCT_QUERY)
             
             # Get current date and datetime
@@ -152,7 +151,6 @@ def main():
 
     except Exception as e:
         print(f"ERROR in main(): {str(e)}")
-        print(f"Scraping operation failed: {str(e)}")
         traceback.print_exc()
         raise
 
