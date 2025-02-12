@@ -151,6 +151,7 @@ def main():
 
     except Exception as e:
         print(f"ERROR in main(): {str(e)}")
+        print("Scraping failed")
         traceback.print_exc()
         raise
 
