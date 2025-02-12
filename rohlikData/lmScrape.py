@@ -143,6 +143,7 @@ def main():
             
             # Database operations with error handling
             try:
+                print("Attempting database update...")
                 db_manager = DatabaseManager()
                 db_manager.update_products(df)
                 #db_manager.export_products_to_csv('products6.csv')
@@ -151,6 +152,7 @@ def main():
 
     except Exception as e:
         print(f"ERROR in main(): {str(e)}")
+        print(f"Scraping operation failed: {str(e)}")
         traceback.print_exc()
         raise
 
