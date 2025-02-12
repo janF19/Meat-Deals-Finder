@@ -11,7 +11,7 @@ def init_scheduler():
     print("Scheduling scraping job...")
     scheduler.add_job(
         scrape_products,
-        trigger=CronTrigger(minute='*/1'),  # Run every minute for immediate testing
+        trigger=CronTrigger(minute='*/10'),  # Run every minute
         id='scrape_products',
         name='Scrape Rohlik products',
         max_instances=1,
@@ -21,7 +21,7 @@ def init_scheduler():
     print("Scheduling recipe job...")
     scheduler.add_job(
         generate_recipes,
-        trigger=CronTrigger(minute='*/12'),  # Run every 2 minutes for testing
+        trigger=CronTrigger(minute='*/12'),  # Run every 2 minutes
         id='generate_recipes',
         name='Generate recipes',
         max_instances=1,
@@ -34,5 +34,6 @@ def init_scheduler():
     # Force immediate execution
     print("Forcing immediate job execution...")
     scheduler.get_job('scrape_products').modify(next_run_time=datetime.now())
+    scheduler.get_job('generate_recipes').modify(next_run_time=datetime.now())
     
     return scheduler

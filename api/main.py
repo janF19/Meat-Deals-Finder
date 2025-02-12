@@ -5,16 +5,18 @@ from api.routes import products, recipes
 from jobs.scheduler import init_scheduler
 import os
 
-# Initialize scheduler
-scheduler = init_scheduler()
+# Don't start scheduler here, just create it
+scheduler = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    scheduler.start()
+    global scheduler
+    scheduler = init_scheduler()  # Initialize and start here
     yield
     # Shutdown
-    scheduler.shutdown()
+    if scheduler:
+        scheduler.shutdown()
 
 app = FastAPI(
     title="Rohlik API",
