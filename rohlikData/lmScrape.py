@@ -93,23 +93,32 @@ def main():
         print("Starting scraping process...")
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
-            page = browser.new_page()
+            context = browser.new_context()
+            
+            # Create a regular Playwright page first
+            playwright_page = context.new_page()
+            
+            # Then wrap it with AgentQL
+            page = agentql.wrap(playwright_page)
             
             print(f"Navigating to {PRODUCTS_URL}...")
             page.goto(PRODUCTS_URL)
             
             # Handle cookies if they appear
             try:
-                # Look for the cookie reject button
                 reject_button = page.locator('[data-test="CookiesDialog-decline"]')
-                if reject_button.is_visible(timeout=5000):  # 5 seconds timeout
+                if reject_button.is_visible(timeout=5000):
                     reject_button.click()
                     print("Cookie banner handled")
             except Exception as e:
                 print("No cookie banner found or already accepted")
             
-            # Rest of your scraping code...
-            product_response = page.query_data(PRODUCT_QUERY)
+            # Use AgentQL query
+            print("Querying products...")
+            product_response = page.query_elements(PRODUCT_QUERY)  # Changed from query_data to query_elements
+            products_data = product_response.to_data()  # Convert response to dictionary
+            products = products_data.get('products', [])
+            print(f"Found {len(products)} products")
             
             # Get current date and datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -117,7 +126,7 @@ def main():
 
             # Process the data into a list of dictionaries
             processed_data = []
-            for product in product_response["products"]:
+            for product in products:
                 expiry_date = process_expiry_date(product.get("expiry_date", "N/A"), current_date)
                 weight = process_weight(product.get("weight", "N/A"))
                 
@@ -145,9 +154,11 @@ def main():
                 print("Attempting database update...")
                 db_manager = DatabaseManager()
                 db_manager.update_products(df)
-                #db_manager.export_products_to_csv('products6.csv')
             except Exception as e:
                 print(f"Database operation failed: {str(e)}")
+
+            # Clean up
+            browser.close()
 
     except Exception as e:
         print(f"ERROR in main(): {str(e)}")
