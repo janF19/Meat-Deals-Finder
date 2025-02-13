@@ -70,10 +70,17 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          # Copy the docker-compose.yml file from repo
+          source: "docker-compose.yml"
+          target: "~/app"
           envs: GITHUB_SHA,ECR_REGISTRY
           script: |
-            # Cleanup old files
-            rm -rf ~/app/*
+            # Verify docker-compose.yml exists
+            if [ ! -f ~/app/docker-compose.yml ]; then
+              echo "Error: docker-compose.yml not found!"
+              exit 1
+            fi
+            
             mkdir -p ~/app
             
             # Create .env file with explicit exports
@@ -92,25 +99,17 @@ jobs:
             export BACKEND_URL='http://${{ secrets.EC2_HOST }}:8000'
             EOL
             
-            # Set proper permissions
             chmod 600 ~/app/.env
-            
             cd ~/app
             
-            # Stop and remove existing containers, networks, and volumes
-            docker-compose down -v
-            
-            # Clean up old images
+            docker-compose down -v || true
             docker system prune -af
             
-            # Login to ECR
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
             
-            # Pull and run containers
             docker-compose pull
             docker-compose up -d
             
-            # Check container logs for debugging
             docker-compose logs
 
       # Add ECR cleanup step
