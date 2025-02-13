@@ -7,6 +7,7 @@ import re
 import sys
 import pandas as pd 
 import traceback
+import logging
 
 # Add parent directory to Python path (place this before the import)
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -88,37 +89,41 @@ def process_weight(weight_str):
     # Return formatted string with 3 decimal places
     return f"{value:.3f}"
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+
 def main():
     try:
-        print("Starting scraping process...")
+        logger.info("Starting scraping process...")
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
             context = browser.new_context()
             
-            # Create a regular Playwright page first
             playwright_page = context.new_page()
-            
-            # Then wrap it with AgentQL
             page = agentql.wrap(playwright_page)
             
-            print(f"Navigating to {PRODUCTS_URL}...")
+            logger.info(f"Navigating to {PRODUCTS_URL}...")
             page.goto(PRODUCTS_URL)
             
-            # Handle cookies if they appear
             try:
                 reject_button = page.locator('[data-test="CookiesDialog-decline"]')
                 if reject_button.is_visible(timeout=5000):
                     reject_button.click()
-                    print("Cookie banner handled")
+                    logger.info("Cookie banner handled")
             except Exception as e:
-                print("No cookie banner found or already accepted")
+                logger.warning("No cookie banner found or already accepted")
             
-            # Use AgentQL query
-            print("Querying products...")
-            product_response = page.query_elements(PRODUCT_QUERY)  # Changed from query_data to query_elements
-            products_data = product_response.to_data()  # Convert response to dictionary
+            logger.info("Querying products...")
+            product_response = page.query_elements(PRODUCT_QUERY)
+            products_data = product_response.to_data()
             products = products_data.get('products', [])
-            print(f"Found {len(products)} products")
+            logger.info(f"Found {len(products)} products")
             
             # Get current date and datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -151,19 +156,15 @@ def main():
             
             # Database operations with error handling
             try:
-                print("Attempting database update...")
+                logger.info("Attempting database update...")
                 db_manager = DatabaseManager()
                 db_manager.update_products(df)
+                logger.info("Database update completed successfully")
             except Exception as e:
-                print(f"Database operation failed: {str(e)}")
-
-            # Clean up
-            browser.close()
+                logger.error(f"Database operation failed: {str(e)}", exc_info=True)
 
     except Exception as e:
-        print(f"ERROR in main(): {str(e)}")
-        print("Scraping failed")
-        traceback.print_exc()
+        logger.error(f"ERROR in main(): {str(e)}", exc_info=True)
         raise
 
 if __name__ == "__main__":

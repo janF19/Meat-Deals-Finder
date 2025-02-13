@@ -72,6 +72,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: GITHUB_SHA,ECR_REGISTRY
           script: |
+            # Cleanup old files
+            rm -rf ~/app/*
             mkdir -p ~/app
             
             # Create .env file with explicit exports
@@ -95,8 +97,11 @@ jobs:
             
             cd ~/app
             
-            # Stop and remove existing containers
-            docker-compose down
+            # Stop and remove existing containers, networks, and volumes
+            docker-compose down -v
+            
+            # Clean up old images
+            docker system prune -af
             
             # Login to ECR
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
@@ -107,3 +112,25 @@ jobs:
             
             # Check container logs for debugging
             docker-compose logs
+
+      # Add ECR cleanup step
+      - name: Clean up old ECR images
+        run: |
+          # Keep only the latest 3 images for each type
+          for type in backend frontend; do
+            # List all images except latest tag
+            IMAGES=$(aws ecr list-images --repository-name rohlik-app --filter "tagStatus=TAGGED" --query "imageIds[?contains(imageTag, '${type}-') && !contains(imageTag, 'latest')].imageTag" --output text)
+            
+            # Sort images by date and keep only the latest 3
+            if [ ! -z "$IMAGES" ]; then
+              OLD_IMAGES=$(echo "$IMAGES" | tr ' ' '\n' | sort -r | tail -n +4)
+              
+              # Delete old images
+              for image in $OLD_IMAGES; do
+                echo "Deleting image: $image"
+                aws ecr batch-delete-image \
+                  --repository-name rohlik-app \
+                  --image-ids imageTag=$image || true
+              done
+            fi
+          done

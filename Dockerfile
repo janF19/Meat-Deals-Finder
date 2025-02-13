@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 
-    
+
 COPY requirements.txt .
 
 # Install requirements with pip and ensure executables are in PATH
@@ -69,7 +69,8 @@ ENV AGENTQL_API_KEY='' \
     FRONTEND_URL='' \
     BACKEND_URL='' \
     ALLOWED_ORIGINS='' \
-    REACT_APP_API_URL=''
+    REACT_APP_API_URL='' \
+    PYTHONUNBUFFERED=1
 
 # Run uvicorn with python -m to ensure proper module resolution
 
