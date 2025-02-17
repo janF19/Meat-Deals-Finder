@@ -8,3 +8,4 @@ checkData.ipynb
 .env.*
 !.env.example
 tree.py
+.envdev
