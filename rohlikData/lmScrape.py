@@ -46,24 +46,27 @@ PRODUCT_QUERY = """
 """
 
 def process_expiry_date(expiry_date_str, current_date):
-    if expiry_date_str == "Spotřebujte zítra":
-        next_day = datetime.strptime(current_date, '%Y-%m-%d') + timedelta(days=1)
-        return next_day.strftime('%Y-%m-%d')
-    elif "Spotřeba do" in expiry_date_str:
-        # Fix the date parsing
-        match = re.search(r'do (\d+)\. (\d+)\.', expiry_date_str)
-        if match:
-            day, month = map(int, match.groups())
-            current_year = datetime.now().year
-            try:
-                expiry_date = datetime(current_year, month, day)
-                if expiry_date < datetime.now():
-                    expiry_date = datetime(current_year + 1, month, day)
-                return expiry_date.strftime('%Y-%m-%d')
-            except ValueError:
-                print(f"Invalid date: day={day}, month={month}, year={current_year}")
-                return None
-    return None  # Return None for invalid dates
+    """Process expiry date with better error handling"""
+    try:
+        if expiry_date_str == "Spotřebujte zítra":
+            next_day = datetime.strptime(current_date, '%Y-%m-%d') + timedelta(days=1)
+            return next_day.strftime('%Y-%m-%d')
+        elif "Spotřeba do" in expiry_date_str:
+            match = re.search(r'do (\d+)\. (\d+)\.', expiry_date_str)
+            if match:
+                day, month = map(int, match.groups())
+                current_year = datetime.now().year
+                try:
+                    expiry_date = datetime(current_year, month, day)
+                    if expiry_date < datetime.now():
+                        expiry_date = datetime(current_year + 1, month, day)
+                    return expiry_date.strftime('%Y-%m-%d')
+                except ValueError:
+                    logger.warning(f"Invalid date values: day={day}, month={month}, year={current_year}")
+                    return None
+    except Exception as e:
+        logger.warning(f"Error processing expiry date '{expiry_date_str}': {str(e)}")
+    return None
 
 def process_weight(weight_str):
     if weight_str == "N/A":
@@ -137,38 +140,61 @@ def main():
                 logger.error("No products found - possible scraping issue")
                 return  # Exit early to avoid database errors
             
-            # Get current date and datetime
+            # Process the data into a list of dictionaries
+            processed_data = []
             current_date = datetime.now().strftime('%Y-%m-%d')
             current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            # Process the data into a list of dictionaries
-            processed_data = []
             for product in products:
-                expiry_date = process_expiry_date(product.get("expiry_date", "N/A"), current_date)
-                weight = process_weight(product.get("weight", "N/A"))
-                
-                if product.get("is_available") == False:
-                    continue
-                
-                processed_data.append({
-                    'date': current_date,
-                    'datetime': current_datetime,
-                    'name': product.get("name", "N/A"),
-                    'current_price': product.get("current_price", "N/A"),
-                    'original_price': product.get("original_price", "N/A"),
-                    'discount': product.get("discount", "N/A"),
-                    'weight': weight,
-                    'price_per_kg': product.get("price_per_kg", "N/A"),
-                    'expiry_date': expiry_date,
-                    'is_available': product.get("is_available", "N/A")
-                })
+                try:
+                    # Process expiry date with fallback
+                    expiry_date = process_expiry_date(product.get("expiry_date", "N/A"), current_date)
+                    if expiry_date is None:
+                        # Set a default expiry date (e.g., 7 days from now) if processing fails
+                        default_expiry = datetime.now() + timedelta(days=7)
+                        expiry_date = default_expiry.strftime('%Y-%m-%d')
+                        logger.warning(f"Using default expiry date for product {product.get('name', 'Unknown')}")
 
-            # Convert to DataFrame
-            df = pd.DataFrame(processed_data)
-            
-            # Only proceed with database update if we have data
+                    weight = process_weight(product.get("weight", "N/A"))
+                    
+                    if product.get("is_available") == False:
+                        continue
+                    
+                    processed_data.append({
+                        'date': current_date,
+                        'datetime': current_datetime,
+                        'name': product.get("name", "N/A"),
+                        'current_price': product.get("current_price", "N/A"),
+                        'original_price': product.get("original_price", "N/A"),
+                        'discount': product.get("discount", "N/A"),
+                        'weight': weight,
+                        'price_per_kg': product.get("price_per_kg", "N/A"),
+                        'expiry_date': expiry_date,  # Now always has a valid date
+                        'is_available': product.get("is_available", True)  # Default to True if not specified
+                    })
+                except Exception as e:
+                    logger.error(f"Error processing product: {str(e)}")
+                    logger.error(f"Product data: {product}")
+                    continue
+
+            # Convert to DataFrame with explicit data types
             if processed_data:
                 try:
+                    df = pd.DataFrame(processed_data)
+                    
+                    # Ensure date columns are properly formatted
+                    df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+                    df['datetime'] = pd.to_datetime(df['datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+                    df['expiry_date'] = pd.to_datetime(df['expiry_date']).dt.strftime('%Y-%m-%d')
+                    
+                    # Replace any NaT values with default dates
+                    df['date'].fillna(current_date, inplace=True)
+                    df['datetime'].fillna(current_datetime, inplace=True)
+                    df['expiry_date'].fillna(
+                        (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d'), 
+                        inplace=True
+                    )
+                    
                     logger.info(f"Attempting database update with {len(processed_data)} products...")
                     logger.debug(f"DataFrame columns: {df.columns.tolist()}")
                     db_manager = DatabaseManager()

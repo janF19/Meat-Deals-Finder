@@ -5,6 +5,9 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DatabaseManager:
     def __init__(self):
@@ -23,6 +26,19 @@ class DatabaseManager:
         return psycopg2.connect(**self.conn_params)
       
                         
+    def clean_price(self, price_str):
+        """Clean price string by removing currency and converting comma to period"""
+        if isinstance(price_str, (int, float)):
+            return float(price_str)
+        try:
+            # Remove currency symbol and whitespace
+            cleaned = price_str.replace('Kč', '').strip()
+            # Replace comma with period for decimal
+            cleaned = cleaned.replace(',', '.')
+            return float(cleaned)
+        except (ValueError, AttributeError):
+            return None
+
     def update_products(self, df):
         """
         Replaces all records in the products table with new data
@@ -40,10 +56,10 @@ class DatabaseManager:
                 df['datetime'] = pd.to_datetime(df['datetime'])
                 df['expiry_date'] = pd.to_datetime(df['expiry_date']).dt.date
                 
-                # Convert numeric columns - force Python float
-                df['current_price'] = df['current_price'].astype(str).astype(float)
-                df['original_price'] = df['original_price'].astype(str).astype(float)
-                df['price_per_kg'] = df['price_per_kg'].astype(str).astype(float)
+                # Clean and convert price columns
+                df['current_price'] = df['current_price'].apply(self.clean_price)
+                df['original_price'] = df['original_price'].apply(self.clean_price)
+                df['price_per_kg'] = df['price_per_kg'].apply(self.clean_price)
                 
                 # Handle discount (stored as VARCHAR in DB)
                 df['discount'] = df['discount'].astype(str)
@@ -58,19 +74,28 @@ class DatabaseManager:
                 # Convert to list of tuples with explicit Python types
                 records = []
                 for _, row in df.iterrows():
-                    record = (
-                        row['date'],
-                        row['datetime'],
-                        str(row['name']),
-                        float(row['current_price']),
-                        float(row['original_price']),
-                        str(row['discount']),
-                        float(row['weight']),
-                        float(row['price_per_kg']),
-                        row['expiry_date'],
-                        bool(row['is_available'])
-                    )
-                    records.append(record)
+                    try:
+                        record = (
+                            row['date'],
+                            row['datetime'],
+                            str(row['name']),
+                            float(row['current_price']) if pd.notnull(row['current_price']) else None,
+                            float(row['original_price']) if pd.notnull(row['original_price']) else None,
+                            str(row['discount']),
+                            float(row['weight']) if pd.notnull(row['weight']) else None,
+                            float(row['price_per_kg']) if pd.notnull(row['price_per_kg']) else None,
+                            row['expiry_date'],
+                            bool(row['is_available'])
+                        )
+                        records.append(record)
+                    except Exception as e:
+                        logger.error(f"Error processing row: {row}")
+                        logger.error(f"Error details: {str(e)}")
+                        continue
+                
+                if not records:
+                    logger.warning("No valid records to insert")
+                    return
                 
                 # Insert new records
                 execute_values(cur, """
