@@ -61,6 +61,17 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
+      # First, copy the docker-compose.yml file
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app"
+
+      # Then run the deployment script
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         env:
@@ -70,9 +81,6 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Copy the docker-compose.yml file from repo
-          source: "docker-compose.yml"
-          target: "~/app"
           envs: GITHUB_SHA,ECR_REGISTRY
           script: |
             # Verify docker-compose.yml exists
