@@ -105,7 +105,7 @@ def main():
     try:
         logger.info("Starting scraping process...")
         with sync_playwright() as playwright:
-            # Launch browser with additional arguments for Docker/Linux environment
+            # Launch browser with additional arguments
             browser = playwright.chromium.launch(
                 headless=True,
                 args=[
@@ -114,11 +114,16 @@ def main():
                     '--disable-gpu',
                     '--disable-software-rasterizer',
                     '--disable-features=VizDisplayCompositor',
+                    '--proxy-server=socks5://localhost:9050'  # If you decide to use Tor
                 ]
             )
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                extra_http_headers={
+                    'Accept-Language': 'cs-CZ,cs;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                }
             )
             
             playwright_page = context.new_page()
@@ -126,19 +131,30 @@ def main():
             
             logger.info(f"Navigating to {PRODUCTS_URL}...")
             try:
-                response = page.goto(PRODUCTS_URL, wait_until='networkidle')
+                # Increase timeout and add waitUntil conditions
+                response = page.goto(
+                    PRODUCTS_URL, 
+                    timeout=60000,  # Increase timeout to 60 seconds
+                    wait_until='networkidle'
+                )
                 logger.info(f"Page loaded with status: {response.status if response else 'unknown'}")
                 
-                page.wait_for_timeout(5000)
+                # Add longer delay after page load
+                page.wait_for_timeout(10000)  # 10 seconds wait
                 
+                # Take debug screenshot
+                page.screenshot(path="/tmp/debug_page.png")
+                
+                # Verify page content
                 page_content = page.content()
                 logger.info(f"Page content length: {len(page_content)}")
                 if len(page_content) < 1000:
-                    logger.error("Page content seems too short, possible loading issue")
+                    logger.error("Page content seems too short, possible blocking")
                     return
                 
             except Exception as e:
                 logger.error(f"Error loading page: {str(e)}")
+                logger.error(f"Current URL: {page.url}")
                 return
             
             try:

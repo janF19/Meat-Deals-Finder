@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxrandr2 \
     xdg-utils \
+    tor \
+    privoxy \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -49,8 +51,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libcairo2 \
     && rm -rf /var/lib/apt/lists/*
-
-
 
 COPY requirements.txt .
 
@@ -92,7 +92,13 @@ ENV AGENTQL_API_KEY='' \
 # Set display environment variable
 ENV DISPLAY=:99
 
+# Add Tor configuration
+COPY torrc /etc/tor/torrc
+RUN service tor start
+
+# Add startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 # Run uvicorn with python -m to ensure proper module resolution
-
-
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/start.sh"]
