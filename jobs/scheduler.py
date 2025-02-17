@@ -15,21 +15,23 @@ def init_scheduler():
     logger.info("Scheduling scraping job...")
     scheduler.add_job(
         scrape_products,
-        trigger=CronTrigger(minute='*/10'),
+        trigger=CronTrigger(minute='*/15'),
         id='scrape_products',
         name='Scrape Rohlik products',
         max_instances=1,
-        coalesce=True
+        coalesce=True,
+        misfire_grace_time=900
     )
     
     logger.info("Scheduling recipe job...")
     scheduler.add_job(
         generate_recipes,
-        trigger=CronTrigger(minute='*/12'),
+        trigger=CronTrigger(minute='*/20'),
         id='generate_recipes',
         name='Generate recipes',
         max_instances=1,
-        coalesce=True
+        coalesce=True,
+        misfire_grace_time=900
     )
     
     scheduler.start()

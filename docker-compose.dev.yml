@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Enable interactive mode for debugging
+    stdin_open: true
+    tty: true
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge

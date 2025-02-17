@@ -102,7 +102,15 @@ def main():
     try:
         logger.info("Starting scraping process...")
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
+            # Launch browser with additional arguments for Docker/Linux environment
+            browser = playwright.chromium.launch(
+                headless=True,
+                args=[
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
+            )
             context = browser.new_context()
             
             playwright_page = context.new_page()
@@ -124,6 +132,10 @@ def main():
             products_data = product_response.to_data()
             products = products_data.get('products', [])
             logger.info(f"Found {len(products)} products")
+            
+            if len(products) == 0:
+                logger.error("No products found - possible scraping issue")
+                return  # Exit early to avoid database errors
             
             # Get current date and datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -154,14 +166,18 @@ def main():
             # Convert to DataFrame
             df = pd.DataFrame(processed_data)
             
-            # Database operations with error handling
-            try:
-                logger.info("Attempting database update...")
-                db_manager = DatabaseManager()
-                db_manager.update_products(df)
-                logger.info("Database update completed successfully")
-            except Exception as e:
-                logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+            # Only proceed with database update if we have data
+            if processed_data:
+                try:
+                    logger.info(f"Attempting database update with {len(processed_data)} products...")
+                    logger.debug(f"DataFrame columns: {df.columns.tolist()}")
+                    db_manager = DatabaseManager()
+                    db_manager.update_products(df)
+                    logger.info("Database update completed successfully")
+                except Exception as e:
+                    logger.error(f"Database operation failed: {str(e)}", exc_info=True)
+            else:
+                logger.warning("No processed data available for database update")
 
     except Exception as e:
         logger.error(f"ERROR in main(): {str(e)}", exc_info=True)
