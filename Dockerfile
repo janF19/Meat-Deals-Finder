@@ -7,6 +7,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     curl \
+    chromium \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatspi2.0-0 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -71,6 +88,9 @@ ENV AGENTQL_API_KEY='' \
     ALLOWED_ORIGINS='' \
     REACT_APP_API_URL='' \
     PYTHONUNBUFFERED=1
+
+# Set display environment variable
+ENV DISPLAY=:99
 
 # Run uvicorn with python -m to ensure proper module resolution
 

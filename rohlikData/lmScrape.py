@@ -111,35 +111,62 @@ def main():
                 args=[
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--disable-software-rasterizer',
+                    '--disable-features=VizDisplayCompositor',
                 ]
             )
-            context = browser.new_context()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            )
             
             playwright_page = context.new_page()
             page = agentql.wrap(playwright_page)
             
             logger.info(f"Navigating to {PRODUCTS_URL}...")
-            page.goto(PRODUCTS_URL)
+            try:
+                response = page.goto(PRODUCTS_URL, wait_until='networkidle')
+                logger.info(f"Page loaded with status: {response.status if response else 'unknown'}")
+                
+                page.wait_for_timeout(5000)
+                
+                page_content = page.content()
+                logger.info(f"Page content length: {len(page_content)}")
+                if len(page_content) < 1000:
+                    logger.error("Page content seems too short, possible loading issue")
+                    return
+                
+            except Exception as e:
+                logger.error(f"Error loading page: {str(e)}")
+                return
             
             try:
                 reject_button = page.locator('[data-test="CookiesDialog-decline"]')
                 if reject_button.is_visible(timeout=5000):
                     reject_button.click()
                     logger.info("Cookie banner handled")
+                    page.wait_for_timeout(2000)
             except Exception as e:
-                logger.warning("No cookie banner found or already accepted")
+                logger.warning(f"Cookie handling error: {str(e)}")
             
             logger.info("Querying products...")
-            product_response = page.query_elements(PRODUCT_QUERY)
-            products_data = product_response.to_data()
-            products = products_data.get('products', [])
-            logger.info(f"Found {len(products)} products")
-            
-            if len(products) == 0:
-                logger.error("No products found - possible scraping issue")
-                return  # Exit early to avoid database errors
-            
+            try:
+                product_response = page.query_elements(PRODUCT_QUERY)
+                products_data = product_response.to_data()
+                products = products_data.get('products', [])
+                logger.info(f"Found {len(products)} products")
+                
+                if len(products) == 0:
+                    logger.error("No products found in response")
+                    logger.debug(f"Response data: {products_data}")
+                    page.screenshot(path="debug_screenshot.png")
+                    return
+                
+            except Exception as e:
+                logger.error(f"Error querying products: {str(e)}")
+                return
+
             # Process the data into a list of dictionaries
             processed_data = []
             current_date = datetime.now().strftime('%Y-%m-%d')

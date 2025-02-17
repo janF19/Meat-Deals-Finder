@@ -12,6 +12,15 @@ def scrape_products():
     try:
         logger.info("Starting scrape_products task...")
         logger.info(f"Current directory: {os.getcwd()}")
+        logger.info(f"Environment variables: {dict(os.environ)}")  # Log environment variables
+        
+        # Check if necessary files exist
+        required_files = ['rohlikData/lmScrape.py', 'db_operations.py']
+        for file in required_files:
+            if os.path.exists(file):
+                logger.info(f"File exists: {file}")
+            else:
+                logger.error(f"Missing file: {file}")
         
         scrape_main()
         logger.info("Scrape_products task completed")
