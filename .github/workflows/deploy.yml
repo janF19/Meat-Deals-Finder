@@ -119,25 +119,3 @@ jobs:
             docker-compose up -d
             
             docker-compose logs
-
-      # Add ECR cleanup step
-      - name: Clean up old ECR images
-        run: |
-          # Keep only the latest 3 images for each type
-          for type in backend frontend; do
-            # List all images except latest tag
-            IMAGES=$(aws ecr list-images --repository-name rohlik-app --filter "tagStatus=TAGGED" --query "imageIds[?contains(imageTag, '${type}-') && !contains(imageTag, 'latest')].imageTag" --output text)
-            
-            # Sort images by date and keep only the latest 3
-            if [ ! -z "$IMAGES" ]; then
-              OLD_IMAGES=$(echo "$IMAGES" | tr ' ' '\n' | sort -r | tail -n +4)
-              
-              # Delete old images
-              for image in $OLD_IMAGES; do
-                echo "Deleting image: $image"
-                aws ecr batch-delete-image \
-                  --repository-name rohlik-app \
-                  --image-ids imageTag=$image || true
-              done
-            fi
-          done
