@@ -8,6 +8,7 @@ import sys
 import pandas as pd 
 import traceback
 import logging
+import requests
 
 # Add parent directory to Python path (place this before the import)
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -94,11 +95,14 @@ def process_weight(weight_str):
 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+# Verify AgentQL configuration
+logger.info(f"AgentQL API Key set: {'AGENTQL_API_KEY' in os.environ}")
+agentql.set_api_key(os.environ.get('AGENTQL_API_KEY'))
 
 
 def main():
@@ -114,15 +118,26 @@ def main():
                     '--disable-gpu',
                     '--disable-software-rasterizer',
                     '--disable-features=VizDisplayCompositor',
-                    '--proxy-server=socks5://localhost:9050'  # If you decide to use Tor
                 ]
             )
+            
+            # More realistic browser context
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                locale='cs-CZ',
+                timezone_id='Europe/Prague',
                 extra_http_headers={
                     'Accept-Language': 'cs-CZ,cs;q=0.9,en-US;q=0.8,en;q=0.7',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Sec-Ch-Ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': '"Windows"',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1'
                 }
             )
             
@@ -131,16 +146,26 @@ def main():
             
             logger.info(f"Navigating to {PRODUCTS_URL}...")
             try:
-                # Increase timeout and add waitUntil conditions
-                response = page.goto(
-                    PRODUCTS_URL, 
-                    timeout=60000,  # Increase timeout to 60 seconds
+                # First visit the main page to get cookies
+                logger.info("Visiting main page first...")
+                main_response = page.goto(
+                    "https://www.rohlik.cz",
+                    timeout=60000,
                     wait_until='networkidle'
                 )
-                logger.info(f"Page loaded with status: {response.status if response else 'unknown'}")
+                logger.info(f"Main page loaded with status: {main_response.status if main_response else 'unknown'}")
+                page.wait_for_timeout(5000)
+                
+                # Now visit the products page
+                response = page.goto(
+                    PRODUCTS_URL,
+                    timeout=60000,
+                    wait_until='networkidle'
+                )
+                logger.info(f"Products page loaded with status: {response.status if response else 'unknown'}")
                 
                 # Add longer delay after page load
-                page.wait_for_timeout(10000)  # 10 seconds wait
+                page.wait_for_timeout(10000)
                 
                 # Take debug screenshot
                 page.screenshot(path="/tmp/debug_page.png")
@@ -148,6 +173,11 @@ def main():
                 # Verify page content
                 page_content = page.content()
                 logger.info(f"Page content length: {len(page_content)}")
+                
+                if "Přístup zamítnut" in page_content or "Access denied" in page_content:
+                    logger.error("Access denied by Rohlik - detected by page content")
+                    return
+                
                 if len(page_content) < 1000:
                     logger.error("Page content seems too short, possible blocking")
                     return
