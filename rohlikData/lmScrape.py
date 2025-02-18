@@ -102,8 +102,8 @@ logger = logging.getLogger(__name__)
 
 # Verify AgentQL configuration
 logger.info(f"AgentQL API Key set: {'AGENTQL_API_KEY' in os.environ}")
-agentql.set_api_key(os.environ.get('AGENTQL_API_KEY'))
-
+# Update this line - AgentQL now uses environment variable directly
+os.environ['AGENTQL_API_KEY'] = os.environ.get('AGENTQL_API_KEY', '')
 
 def main():
     try:
