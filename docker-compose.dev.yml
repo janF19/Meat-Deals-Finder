@@ -6,18 +6,55 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - .envdev
     volumes:
       - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix
     networks:
       - app-network
+    depends_on:
+      - db
     environment:
       - PYTHONUNBUFFERED=1
+      - DISPLAY=:99
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     # Enable interactive mode for debugging
     stdin_open: true
     tty: true
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    env_file:
+      - .envdev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=rohlik
+      - POSTGRES_PASSWORD=rohlik123
+      - POSTGRES_DB=rohlikdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./rohlikData/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - app-network
+
 networks:
   app-network:
-    name: app-network
     driver: bridge
+
+volumes:
+  postgres_data:

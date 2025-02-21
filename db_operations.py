@@ -54,7 +54,11 @@ class DatabaseManager:
                 # Date and datetime conversions
                 df['date'] = pd.to_datetime(df['date']).dt.date
                 df['datetime'] = pd.to_datetime(df['datetime'])
-                df['expiry_date'] = pd.to_datetime(df['expiry_date']).dt.date
+                
+                # Handle expiry_date - convert to date and replace NaT with None
+                df['expiry_date'] = pd.to_datetime(df['expiry_date'])
+                df['expiry_date'] = df['expiry_date'].where(df['expiry_date'].notna(), None)
+                df['expiry_date'] = df['expiry_date'].dt.date.where(df['expiry_date'].notna(), None)
                 
                 # Clean and convert price columns
                 df['current_price'] = df['current_price'].apply(self.clean_price)

@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 from db_operations import DatabaseManager
 from openai import OpenAI
 from db_operations import DatabaseManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 def translate_food_names(df):
     """
@@ -68,7 +71,6 @@ def get_recipes_for_ingredient(ingredient, english_ingredient, api_key):
     """
     base_url = "https://api.spoonacular.com/recipes/findByIngredients"
     
-
     # Clean up the ingredient name further
     search_term = english_ingredient.split(',')[0]
     search_term = search_term.split('in')[0].strip()
@@ -85,31 +87,52 @@ def get_recipes_for_ingredient(ingredient, english_ingredient, api_key):
     
     try:
         response = requests.get(base_url, params=params)
-        recipes = response.json()
+        response.raise_for_status()  # This will raise an exception for bad status codes
         
+        recipes = response.json()
+        if isinstance(recipes, str):  # Check if response is a string instead of list
+            print(f"Unexpected API response format: {recipes}")
+            return []
+            
+        if not isinstance(recipes, list):
+            print(f"Unexpected API response type: {type(recipes)}")
+            return []
+            
         exact_matches = []
         for recipe in recipes:
+            if not isinstance(recipe, dict):
+                print(f"Unexpected recipe format: {recipe}")
+                continue
+                
             used_ingredients = recipe.get('usedIngredients', [])
             
             # More flexible matching
             search_words = search_term.split()
-            if any(all(word in ing['name'].lower() for word in search_words) 
+            if any(all(word in ing.get('name', '').lower() for word in search_words) 
                   for ing in used_ingredients):
-                recipe_id = recipe['id']
+                recipe_id = recipe.get('id')
+                if not recipe_id:
+                    continue
+                    
                 detail_url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
                 detail_response = requests.get(detail_url, params={"apiKey": api_key})
+                detail_response.raise_for_status()
                 recipe_details = detail_response.json()
+                
+                if not isinstance(recipe_details, dict):
+                    print(f"Unexpected recipe details format: {recipe_details}")
+                    continue
                 
                 # Filter out pantry items from missing ingredients
                 missing_ingredients = [
-                    ing['name'] for ing in recipe.get('missedIngredients', [])
-                    if ing.get('name') and not any(pantry_item in ing['name'].lower() 
+                    ing.get('name') for ing in recipe.get('missedIngredients', [])
+                    if ing.get('name') and not any(pantry_item in ing.get('name', '').lower() 
                     for pantry_item in PANTRY_ITEMS)
                 ]
                 
                 exact_matches.append({
-                    'name': recipe['title'],
-                    'ingredients': [ing['name'] for ing in used_ingredients],
+                    'name': recipe.get('title', 'Unknown Recipe'),
+                    'ingredients': [ing.get('name', '') for ing in used_ingredients],
                     'missing_ingredients': missing_ingredients,
                     'instructions': recipe_details.get('instructions', ''),
                     'cooking_time': recipe_details.get('readyInMinutes', 0),
@@ -123,6 +146,9 @@ def get_recipes_for_ingredient(ingredient, english_ingredient, api_key):
         print(f"Found {len(exact_matches)} recipes for {search_term}")
         return exact_matches
     
+    except requests.exceptions.RequestException as e:
+        print(f"API request error for {ingredient}: {e}")
+        return []
     except Exception as e:
         print(f"Error getting recipes for {ingredient}: {e}")
         return []

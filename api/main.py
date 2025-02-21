@@ -1,34 +1,27 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 from api.routes import products, recipes
 from jobs.scheduler import init_scheduler
 import os
+import logging
 
-# Don't start scheduler here, just create it
-scheduler = None
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    global scheduler
-    scheduler = init_scheduler()  # Initialize and start here
-    yield
-    # Shutdown
-    if scheduler:
-        scheduler.shutdown()
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Rohlik API",
     description="API for Rohlik product and recipe data",
-    version="1.0.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
-# Get allowed origins from environment variable or use default
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Initialize scheduler when app starts
+scheduler = init_scheduler()
 
-# Configure CORS with environment variables
+# Get allowed origins from environment variable or use default
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -36,6 +29,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    if not scheduler or not scheduler.running:
+        raise HTTPException(status_code=503, detail="Scheduler not running")
+    return {"status": "healthy", "scheduler": "running"}
 
 # Include routers
 app.include_router(products.router, prefix="/api/v1", tags=["products"])

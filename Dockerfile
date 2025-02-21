@@ -26,26 +26,40 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xdg-utils \
     tor \
     privoxy \
+    libnss3-dev \
+    libxss1 \
+    libasound2 \
+    libatk1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create Tor configuration
 RUN echo "SocksPort 9050" > /etc/tor/torrc
 
 # Create startup script
-RUN echo '#!/bin/bash\nservice tor start\nsleep 5\nexec uvicorn api.main:app --host 0.0.0.0 --port 8000' > /start.sh && \
+RUN echo '#!/bin/bash\n\
+Xvfb :99 -screen 0 1024x768x16 & \
+service tor start\n\
+sleep 5\n\
+exec uvicorn api.main:app --host 0.0.0.0 --port 8000' > /start.sh && \
     chmod +x /start.sh
+
+# Install xvfb
+RUN apt-get update && apt-get install -y xvfb && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies and Playwright
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir fastapi uvicorn
+    pip install --no-cache-dir fastapi uvicorn && \
+    playwright install --with-deps chromium && \
+    playwright install && \
+    playwright install-deps
+
+# Make sure the Playwright browser is installed in the correct location
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN pip install --no-cache-dir "uvicorn[standard]" && \
     which uvicorn
-
-RUN playwright install chromium && \
-    playwright install-deps chromium
 
 # Copy the application code
 COPY . .
