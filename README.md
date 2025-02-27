@@ -93,3 +93,10 @@ Create a `.env` file in the root directory with the following variables:
 OPENAI_API_KEY=your_openai_key
 AGENTQL_API_KEY=your_agentql_key
 SPOONACULAR_API_KEY=your_spoonacular_key
+
+
+
+
+
+
+I tried to do custom search serper call and process with beuatiful soup and llm to find czech recipe but difficult to get good results.

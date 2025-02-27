@@ -102,10 +102,15 @@ def main():
     try:
         logger.info("Starting scraping...")
         with sync_playwright() as playwright:
-            # Add more detailed browser launch options
+            # Modified browser launch options for Docker
             browser = playwright.chromium.launch(
                 headless=True,
-                args=['--no-sandbox', '--disable-setuid-sandbox']
+                args=[
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu'
+                ]
             )
             
             page = agentql.wrap(browser.new_page())

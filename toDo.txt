@@ -1,0 +1,8 @@
+
+
+ok scraping works locally again now it is time to dcockerize it - scheduler works now 
+
+
+
+
+

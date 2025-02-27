@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${ECR_REGISTRY}/rohlik-app:backend-latest
+    ports:
+      - "8000:8000"
+    environment:
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SPOONACULAR_API_KEY=${SPOONACULAR_API_KEY}
+      - AGENTQL_API_KEY=${AGENTQL_API_KEY}
+      - SGAI_API_KEY=${SGAI_API_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
+      - TOR_PROXY=socks5://localhost:9050
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+
+  frontend:
+    image: ${ECR_REGISTRY}/rohlik-app:frontend-latest
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_API_URL=${BACKEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: rohlik-network

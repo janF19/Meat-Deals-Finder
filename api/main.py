@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import products, recipes
-from jobs.scheduler import init_scheduler
 import os
 import logging
+import asyncio
+from jobs.scheduler import init_scheduler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +17,10 @@ app = FastAPI(
 )
 
 # Initialize scheduler when app starts
-scheduler = init_scheduler()
+@app.on_event("startup")
+async def startup_event():
+    global scheduler
+    scheduler = await init_scheduler()
 
 # Get allowed origins from environment variable or use default
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")

@@ -1,88 +1,78 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
 import logging
 import os
 import traceback
 import subprocess
 import sys
+from datetime import datetime, timedelta
 
 # Configure detailed logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def run_scraping():
+# Semaphore to track if scraping is running
+scraping_semaphore = asyncio.Lock()
+
+async def run_scraping():
     try:
-        logger.info("Starting scrape_products task...")
-        
-        # Get the correct path for lmScrape.py (one level up, then into rohlikData)
-        current_dir = os.path.dirname(os.path.dirname(__file__))
-        script_path = os.path.join(current_dir, 'rohlikData', 'lmScrape.py')
-        
-        # Run with real-time output streaming
-        process = subprocess.Popen(
-            [sys.executable, script_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            cwd=current_dir
-        )
-        
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output:
-                print(output.strip())  # or logger.info(output.strip())
-            if process.poll() is not None:
-                break
+        async with scraping_semaphore:
+            logger.info("Starting scrape_products task...")
             
-        # Get any remaining output
-        remaining_output, errors = process.communicate()
-        if remaining_output:
-            print(remaining_output.strip())
-        if errors:
-            logger.error(f"Errors: {errors}")
+            current_dir = os.path.dirname(os.path.dirname(__file__))
+            script_path = os.path.join(current_dir, 'rohlikData', 'lmScrape.py')
             
-        if process.returncode == 0:
-            logger.info("Scrape_products task completed successfully")
-        else:
-            logger.error(f"Scraping failed with return code: {process.returncode}")
+            process = await asyncio.to_thread(subprocess.run,
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                cwd=current_dir
+            )
             
+            # Print stdout
+            if process.stdout:
+                print(process.stdout)
+            
+            # Only log as error if stderr contains actual error messages
+            if process.stderr:
+                if "ERROR:" in process.stderr:
+                    logger.error(f"Errors: {process.stderr}")
+                else:
+                    logger.info(f"Script output: {process.stderr}")
+                
+            if process.returncode == 0:
+                logger.info("Scrape_products task completed successfully")
+            else:
+                logger.error(f"Scraping failed with return code: {process.returncode}")
+                
     except Exception as e:
         logger.error(f"ERROR in scrape_products: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
 
-def run_recipe_generation():
+async def run_recipe_generation():
     try:
+        if scraping_semaphore.locked():
+            logger.info("Waiting for scraping to complete...")
+            async with scraping_semaphore:
+                pass
+        
         logger.info("Starting recipe generation...")
         
-        # Get the correct path for generateRec.py (one level up)
         current_dir = os.path.dirname(os.path.dirname(__file__))
         script_path = os.path.join(current_dir, 'generateRec.py')
         
-        # Run with real-time output streaming
-        process = subprocess.Popen(
+        # Use asyncio.to_thread here too
+        process = await asyncio.to_thread(subprocess.run,
             [sys.executable, script_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
-            bufsize=1,
             cwd=current_dir
         )
         
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output:
-                print(output.strip())  # or logger.info(output.strip())
-            if process.poll() is not None:
-                break
-            
-        # Get any remaining output
-        remaining_output, errors = process.communicate()
-        if remaining_output:
-            print(remaining_output.strip())
-        if errors:
-            logger.error(f"Errors: {errors}")
+        print(process.stdout)
+        
+        if process.stderr:
+            logger.error(f"Errors: {process.stderr}")
             
         if process.returncode == 0:
             logger.info("Recipe generation completed successfully")
@@ -93,28 +83,54 @@ def run_recipe_generation():
         logger.error(f"Error during recipe generation: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
 
-def init_scheduler():
-    scheduler = BackgroundScheduler()
+async def scheduled_scraping():
+    await run_scraping()
+
+async def scheduled_recipe_generation():
+    await run_recipe_generation()
+
+async def init_scheduler():
+    scheduler = AsyncIOScheduler()
     
-    # Run scraping every 30 minutes
+    # Add scheduled jobs
     scheduler.add_job(
-        run_scraping,
+        scheduled_scraping,
         'cron',
-        minute='*/30'
+        minute='*/30',
+        next_run_time=datetime.now() + timedelta(minutes=30)  # Start after 30 mins
     )
     
-    # Run recipe generation every 2 hours
     scheduler.add_job(
-        run_recipe_generation,
+        scheduled_recipe_generation,
         'cron',
-        hour='*/2'
+        hour='*/2',
+        next_run_time=datetime.now() + timedelta(hours=2)  # Start after 2 hours
     )
     
     scheduler.start()
     
-    # Trigger first run immediately on startup
-    logger.info("Running initial scraping and recipe generation...")
-    run_scraping()
-    run_recipe_generation()
+    # Run initial tasks
+    logger.info("Running initial scraping...")
+    await run_scraping()
+    
+    logger.info("Running initial recipe generation...")
+    await run_recipe_generation()
     
     return scheduler
+
+# Function to use when importing the scheduler
+def start_scheduler():
+    """Use this function when importing the scheduler into another script"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    scheduler = loop.run_until_complete(init_scheduler())
+    return scheduler
+
+# For running as standalone script
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    scheduler = loop.run_until_complete(init_scheduler())
+    try:
+        loop.run_forever()
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
