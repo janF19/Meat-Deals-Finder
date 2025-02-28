@@ -64,16 +64,30 @@ jobs:
       - name: Debug connection info
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_DNS: "ec2-54-172-5-169.compute-1.amazonaws.com"  # Use your EC2's public DNS
         shell: bash
         run: |
-          echo "Testing connection to ${{ secrets.EC2_HOST }}"
+          echo "Testing connection to $EC2_DNS"
           echo "Username: ubuntu"
           echo "Testing SSH..."
           mkdir -p ~/.ssh
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
           echo "$SSH_KEY" > key.pem
           chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem -vvv ubuntu@${{ secrets.EC2_HOST }}
+          
+          # Network diagnostics
+          echo "Running ping test..."
+          ping -c 4 $EC2_DNS
+          
+          echo "Running traceroute..."
+          traceroute $EC2_DNS
+          
+          echo "Testing SSH connection..."
+          ssh -o StrictHostKeyChecking=no -i key.pem -vvv ubuntu@$EC2_DNS
+          
+      - name: Test direct TCP connection
+        run: |
+          nc -zv ${{ secrets.EC2_HOST }} 22 -w 10
 
       - name: Debug SSH connection
         uses: appleboy/ssh-action@master
