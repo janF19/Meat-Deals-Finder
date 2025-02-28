@@ -61,13 +61,29 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
+      - name: Debug connection info
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        shell: bash
+        run: |
+          echo "Testing connection to ${{ secrets.EC2_HOST }}"
+          echo "Username: ubuntu"
+          echo "Testing SSH..."
+          mkdir -p ~/.ssh
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+          ssh -o StrictHostKeyChecking=no -i key.pem -vvv ubuntu@${{ secrets.EC2_HOST }}
+
       - name: Debug SSH connection
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 60s
+          timeout: 120s
+          debug: true
+          use_insecure_cipher: true
           script: |
             echo "Connection successful!"
             pwd
