@@ -114,19 +114,26 @@ jobs:
           timeout 10 bash -c "</dev/tcp/${{ secrets.EC2_HOST }}/22" && echo "Port 22 is open" || echo "Port 22 connection failed"
 
       - name: Verify SSH connection via appleboy/ssh-action
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           timeout: 120s
           command_timeout: 30s
-          debug: true
-          use_insecure_cipher: true
           script: |
             echo "Connection successful!"
             echo "Running on host: $(hostname)"
             echo "Current user: $(whoami)"
+
+      # Alternative SSH verification using plain SSH
+      - name: Verify SSH connection (fallback)
+        if: failure()
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/key.pem
+          chmod 600 ~/.ssh/key.pem
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ubuntu@${{ secrets.EC2_HOST }} "echo Connection successful"
 
       - name: Copy docker-compose file to EC2
         uses: appleboy/scp-action@master
