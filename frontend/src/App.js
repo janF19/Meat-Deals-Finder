@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
-// Make sure this points to the correct URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://ec2-54-172-5-169.compute-1.amazonaws.com:8000';
+// Use the environment variable with a fallback
+const API_URL = process.env.REACT_APP_API_URL || 'http://54.172.5.169:8000';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -26,17 +26,19 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Make sure these URLs are correct
+        console.log('API URL:', API_URL); // Debug log
+        console.log('Attempting to fetch products from:', `${API_URL}/api/v1/products?available_only=true`);
         const productsResponse = await axios.get(`${API_URL}/api/v1/products?available_only=true`);
         setProducts(productsResponse.data);
 
-        console.log('Attempting to fetch from:', `${API_URL}/api/v1/recipes`);
+        console.log('Attempting to fetch recipes from:', `${API_URL}/api/v1/recipes`);
         const recipesResponse = await axios.get(`${API_URL}/api/v1/recipes`);
         console.log('Recipes response:', recipesResponse.data);
         setRecipes(recipesResponse.data);
       } catch (error) {
         console.error('Full error:', error);
         console.error('Error response:', error.response);
+        console.error('Error request:', error.request);
       }
     };
 
