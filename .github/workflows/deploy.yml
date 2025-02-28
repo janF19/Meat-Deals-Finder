@@ -10,8 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - name: Install Docker Compose
+      - name: Install tools and dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y net-tools iputils-ping traceroute dnsutils
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
@@ -23,6 +25,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Verify EC2 instance status
+        run: |
+          echo "Verifying EC2 instance status via AWS CLI..."
+          aws ec2 describe-instances --filters "Name=dns-name,Values=${{ secrets.EC2_HOST }}" \
+            --query "Reservations[].Instances[].{InstanceId:InstanceId,State:State.Name,PublicIP:PublicIpAddress,PublicDNS:PublicDnsName}" \
+            --output table || echo "Could not find instance with hostname ${{ secrets.EC2_HOST }}"
+      
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -61,47 +70,63 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
-      - name: Debug connection info
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_DNS: "ec2-54-172-5-169.compute-1.amazonaws.com"  # Use your EC2's public DNS
-        shell: bash
+      - name: Network diagnostics
         run: |
-          echo "Testing connection to $EC2_DNS"
-          echo "Username: ubuntu"
-          echo "Testing SSH..."
-          mkdir -p ~/.ssh
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
-          echo "$SSH_KEY" > key.pem
-          chmod 600 key.pem
+          echo "Running network diagnostics..."
+          echo "Host IP lookup:"
+          host ${{ secrets.EC2_HOST }} || echo "Host lookup failed"
           
-          # Network diagnostics
           echo "Running ping test..."
-          ping -c 4 $EC2_DNS
+          ping -c 4 ${{ secrets.EC2_HOST }} || echo "Ping failed but continuing..."
           
           echo "Running traceroute..."
-          traceroute $EC2_DNS
+          traceroute ${{ secrets.EC2_HOST }} || echo "Traceroute failed but continuing..."
           
-          echo "Testing SSH connection..."
-          ssh -o StrictHostKeyChecking=no -i key.pem -vvv ubuntu@$EC2_DNS
+          echo "Testing port 22 connectivity..."
+          nc -zv ${{ secrets.EC2_HOST }} 22 -w 10 || echo "Port 22 not accessible but continuing..."
           
-      - name: Test direct TCP connection
-        run: |
-          nc -zv ${{ secrets.EC2_HOST }} 22 -w 10
+          echo "GitHub Actions runner public IP:"
+          curl -s https://api.ipify.org
 
-      - name: Debug SSH connection
+      - name: Prepare SSH connection
+        run: |
+          mkdir -p ~/.ssh
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
+          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+          
+          # Validate SSH key format
+          echo "Validating SSH key format..."
+          ssh-keygen -l -f key.pem || echo "SSH key format issue detected"
+
+      - name: Try direct SSH connection
+        continue-on-error: true
+        run: |
+          echo "Testing direct SSH connection with verbose output..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i key.pem -vvv ubuntu@${{ secrets.EC2_HOST }} "echo Connection successful"
+
+      - name: Check SSH port on EC2
+        continue-on-error: true
+        run: |
+          # Try alternative methods to check SSH
+          echo "Testing TCP connection to SSH port..."
+          timeout 10 bash -c "</dev/tcp/${{ secrets.EC2_HOST }}/22" && echo "Port 22 is open" || echo "Port 22 connection failed"
+
+      - name: Verify SSH connection via appleboy/ssh-action
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           timeout: 120s
+          command_timeout: 30s
           debug: true
           use_insecure_cipher: true
           script: |
             echo "Connection successful!"
-            pwd
-            ls -la
+            echo "Running on host: $(hostname)"
+            echo "Current user: $(whoami)"
 
       - name: Copy docker-compose file to EC2
         uses: appleboy/scp-action@master
@@ -111,8 +136,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.deploy.yml"
           target: "~/app"
+          timeout: 120s
 
-      # Then run the deployment script
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         env:
@@ -123,14 +148,20 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: GITHUB_SHA,ECR_REGISTRY
+          script_stop: true
+          timeout: 120s
+          command_timeout: 30m
           script: |
+            echo "Starting deployment on $(hostname)..."
+            
+            # Create app directory if it doesn't exist
+            mkdir -p ~/app
+            
             # Verify docker-compose file exists
             if [ ! -f ~/app/docker-compose.deploy.yml ]; then
               echo "Error: docker-compose.deploy.yml not found!"
               exit 1
             fi
-            
-            mkdir -p ~/app
             
             # Create .env file with explicit exports
             cat > ~/app/.env << EOL
@@ -151,16 +182,36 @@ jobs:
             chmod 600 ~/app/.env
             cd ~/app
             
+            # Verify Docker is running
+            if ! docker info > /dev/null 2>&1; then
+              echo "Docker is not running or not installed!"
+              echo "Attempting to start Docker service..."
+              sudo systemctl start docker || echo "Failed to start Docker service"
+              sudo systemctl status docker
+            fi
+            
             # Stop and remove existing containers
+            echo "Stopping existing containers..."
             docker-compose -f docker-compose.deploy.yml down -v || true
-            docker system prune -af
+            docker system prune -af --volumes || echo "Failed to prune Docker system but continuing..."
             
             # Login to ECR
+            echo "Logging into ECR..."
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
             
             # Pull and start new containers
+            echo "Pulling latest images..."
             docker-compose -f docker-compose.deploy.yml pull
+            
+            echo "Starting containers..."
             docker-compose -f docker-compose.deploy.yml up -d
             
             # Show logs
+            echo "Container logs:"
             docker-compose -f docker-compose.deploy.yml logs
+            
+            # Verify containers are running
+            echo "Checking container status:"
+            docker-compose -f docker-compose.deploy.yml ps
+            
+            echo "Deployment completed successfully!"
