@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
-// Add this near the top of the file
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Make sure this points to the correct URL
+const API_URL = process.env.REACT_APP_API_URL || 'http://ec2-54-172-5-169.compute-1.amazonaws.com:8000';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -26,14 +26,17 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Updated URLs to use environment variable
+        // Make sure these URLs are correct
         const productsResponse = await axios.get(`${API_URL}/api/v1/products?available_only=true`);
         setProducts(productsResponse.data);
 
+        console.log('Attempting to fetch from:', `${API_URL}/api/v1/recipes`);
         const recipesResponse = await axios.get(`${API_URL}/api/v1/recipes`);
+        console.log('Recipes response:', recipesResponse.data);
         setRecipes(recipesResponse.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Full error:', error);
+        console.error('Error response:', error.response);
       }
     };
 
