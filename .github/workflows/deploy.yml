@@ -165,6 +165,7 @@ jobs:
             
             # Create .env file with explicit exports
             cat > ~/app/.env << EOL
+            export ECR_REGISTRY='${ECR_REGISTRY}'
             export DB_USER='${{ secrets.DB_USER }}'
             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
             export DB_HOST='${{ secrets.DB_HOST }}'
@@ -174,6 +175,7 @@ jobs:
             export AGENTQL_API_KEY='${{ secrets.AGENTQL_API_KEY }}'
             export SGAI_API_KEY='${{ secrets.SGAI_API_KEY }}'
             export SPOONACULAR_API_KEY='${{ secrets.SPOONACULAR_API_KEY }}'
+            export FRONTEND_URL='http://${{ secrets.EC2_HOST }}'
             export ALLOWED_ORIGINS='http://${{ secrets.EC2_HOST }}'
             export REACT_APP_API_URL='http://${{ secrets.EC2_HOST }}:8000'
             export BACKEND_URL='http://${{ secrets.EC2_HOST }}:8000'
@@ -181,6 +183,7 @@ jobs:
             
             chmod 600 ~/app/.env
             cd ~/app
+            set -a && source .env && set +a
             
             # Verify Docker is running
             if ! docker info > /dev/null 2>&1; then
@@ -204,8 +207,7 @@ jobs:
             docker-compose -f docker-compose.deploy.yml pull
             
             echo "Starting containers..."
-            docker-compose -f docker-compose.deploy.yml up -d
-            
+            docker-compose -f docker-compose.deploy.yml up -d            
             # Show logs
             echo "Container logs:"
             docker-compose -f docker-compose.deploy.yml logs
