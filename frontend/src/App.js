@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
-// Use the environment variable with a fallback
-const API_URL = process.env.REACT_APP_API_URL || 'http://54.172.5.169:8000';
+// Use environment variable or fallback to relative path
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -26,14 +26,15 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('API URL:', API_URL); // Debug log
-        console.log('Attempting to fetch products from:', `${API_URL}/api/v1/products?available_only=true`);
-        const productsResponse = await axios.get(`${API_URL}/api/v1/products?available_only=true`);
+        console.log('API URL:', API_URL);
+        const productsUrl = `${API_URL}/api/v1/products?available_only=true`;
+        console.log('Fetching products from:', productsUrl);
+        const productsResponse = await axios.get(productsUrl);
         setProducts(productsResponse.data);
 
-        console.log('Attempting to fetch recipes from:', `${API_URL}/api/v1/recipes`);
-        const recipesResponse = await axios.get(`${API_URL}/api/v1/recipes`);
-        console.log('Recipes response:', recipesResponse.data);
+        const recipesUrl = `${API_URL}/api/v1/recipes`;
+        console.log('Fetching recipes from:', recipesUrl);
+        const recipesResponse = await axios.get(recipesUrl);
         setRecipes(recipesResponse.data);
       } catch (error) {
         console.error('Full error:', error);
