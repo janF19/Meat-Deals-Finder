@@ -38,20 +38,21 @@ RUN echo "SocksPort 9050" > /etc/tor/torrc
 
 # Create startup script
 RUN echo '#!/bin/bash\n\
-Xvfb :99 -screen 0 1024x768x16 & \
+Xvfb :99 -screen 0 1024x768x16 & \n\
 service tor start\n\
 sleep 5\n\
 exec uvicorn api.main:app --host 0.0.0.0 --port 8000' > /start.sh && \
     chmod +x /start.sh
 
-COPY requirements.txt .
-
 # Install Python dependencies and Playwright
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir "uvicorn[standard]" fastapi && \
-    playwright install --with-deps chromium && \
-    playwright install && \
-    playwright install-deps
+    # Install Playwright and ensure browsers are downloaded
+    pip install --no-cache-dir playwright && \
+    python -m playwright install --with-deps chromium && \
+    # Verify the headless_shell executable exists
+    ls -la /ms-playwright/chromium_headless_shell-*/chrome-linux/headless_shell || (echo "Playwright browser installation failed!" && exit 1)
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PYTHONPATH=/app
