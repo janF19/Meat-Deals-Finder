@@ -48,11 +48,11 @@ exec uvicorn api.main:app --host 0.0.0.0 --port 8000' > /start.sh && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir "uvicorn[standard]" fastapi && \
-    # Install Playwright and ensure browsers are downloaded
     pip install --no-cache-dir playwright && \
-    python -m playwright install --with-deps chromium && \
-    # Verify the headless_shell executable exists
-    ls -la /ms-playwright/chromium_headless_shell-*/chrome-linux/headless_shell || (echo "Playwright browser installation failed!" && exit 1)
+    # Set the installation path explicitly during install
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright python -m playwright install --with-deps chromium && \
+    # Verify the headless_shell executable exists in the correct location
+    ls -la /ms-playwright/chromium-*/chrome-linux/chrome || (echo "Playwright browser installation failed!" && exit 1)
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PYTHONPATH=/app
