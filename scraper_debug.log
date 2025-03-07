@@ -1,0 +1,216 @@
+2025-03-02 22:24:03,119 - __main__ - INFO - Starting scraping...
+2025-03-02 22:24:03,120 - asyncio - DEBUG - Using selector: EpollSelector
+2025-03-02 22:24:05,337 - __main__ - INFO - Navigation attempt 1 to https://www.rohlik.cz/zachran-a-usetri/c300103000-maso-a-ryby/
+2025-03-02 22:24:06,357 - __main__ - DEBUG - Browser console: Failed to load resource: the server responded with a status of 403 ()
+2025-03-02 22:24:06,652 - __main__ - INFO - Querying products...
+2025-03-02 22:24:06,653 - agentql - DEBUG - Querying data: \{\products[]{\name\current_price\original_price\discount\weight\price_per_kg\expiry_date\is_available\}\}\ on <Page url='https://www.rohlik.cz/zachran-a-usetri/c300103000-maso-a-ryby/'>
+2025-03-02 22:24:06,656 - agentql - DEBUG - Waiting for <Page url='https://www.rohlik.cz/zachran-a-usetri/c300103000-maso-a-ryby/'> to reach 'Page Ready' state
+2025-03-02 22:24:08,651 - agentql - DEBUG - Page ready: No DOM activity for 0.5 seconds.
+2025-03-02 22:24:09,875 - agentql - DEBUG - Page ready: No DOM activity for 0.5 seconds.
+2025-03-02 22:24:09,876 - agentql - DEBUG - Page ready: No network and DOM activity for 0.5 seconds.
+2025-03-02 22:24:09,877 - agentql - DEBUG - Finished waiting for <Page url='https://www.rohlik.cz/zachran-a-usetri/c300103000-maso-a-ryby/'> to reach 'Page Ready' state
+2025-03-02 22:24:10,092 - agentql - INFO - AgentQL query execution may take longer than expected, especially for complex queries and lengthy webpages. If you notice no activity in the logs, please be patient—the query is still in progress and has not frozen. The current timeout is set to 900 seconds, so you can expect a response within that timeframe. If a timeout error occurs, consider extending the timeout duration to give AgentQL backend more time to finish the work.
+2025-03-02 22:24:10,124 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): api.agentql.com:443
+2025-03-02 22:24:27,836 - urllib3.connectionpool - DEBUG - https://api.agentql.com:443 "POST /api/v2/query-data HTTP/1.1" 200 3691
+2025-03-02 22:24:27,852 - agentql - DEBUG - Request ID for the query request \{\products[]{\name\current_price\original_price\discount\weight\price_per_kg\expiry_date\is_available\}\}\ is ea9a083f-f659-4ce6-8bb0-4f003fa54970
+2025-03-02 22:24:27,862 - __main__ - INFO - Found 18 products
+2025-03-02 22:24:27,865 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,866 - __main__ - INFO - 
+Product 1:
+2025-03-02 22:24:27,866 - __main__ - INFO - Name: Vodňanská kachna Kachní polévková směs s droby
+2025-03-02 22:24:27,867 - __main__ - INFO - Current Price: 33.48
+2025-03-02 22:24:27,867 - __main__ - INFO - Original Price: 54.0
+2025-03-02 22:24:27,867 - __main__ - INFO - Discount: -38
+2025-03-02 22:24:27,868 - __main__ - INFO - Weight: 0.600
+2025-03-02 22:24:27,868 - __main__ - INFO - Price per kg: 55.8
+2025-03-02 22:24:27,868 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,869 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,869 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,870 - __main__ - INFO - 
+Product 2:
+2025-03-02 22:24:27,870 - __main__ - INFO - Name: Farma rodiny Němcovy Kuřecí prsa
+2025-03-02 22:24:27,871 - __main__ - INFO - Current Price: 161.36
+2025-03-02 22:24:27,871 - __main__ - INFO - Original Price: 215.15
+2025-03-02 22:24:27,871 - __main__ - INFO - Discount: -25
+2025-03-02 22:24:27,872 - __main__ - INFO - Weight: 0.650
+2025-03-02 22:24:27,872 - __main__ - INFO - Price per kg: 248.25
+2025-03-02 22:24:27,872 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,872 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,873 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,873 - __main__ - INFO - 
+Product 3:
+2025-03-02 22:24:27,874 - __main__ - INFO - Name: DZ Klatovy Kuřecí mletý polotovar
+2025-03-02 22:24:27,874 - __main__ - INFO - Current Price: 52.74
+2025-03-02 22:24:27,874 - __main__ - INFO - Original Price: 87.9
+2025-03-02 22:24:27,874 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,875 - __main__ - INFO - Weight: 0.500
+2025-03-02 22:24:27,876 - __main__ - INFO - Price per kg: 105.48
+2025-03-02 22:24:27,876 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,877 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,877 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,877 - __main__ - INFO - 
+Product 4:
+2025-03-02 22:24:27,878 - __main__ - INFO - Name: Telecí oháňka
+2025-03-02 22:24:27,878 - __main__ - INFO - Current Price: 98.15
+2025-03-02 22:24:27,878 - __main__ - INFO - Original Price: 196.31
+2025-03-02 22:24:27,879 - __main__ - INFO - Discount: -50
+2025-03-02 22:24:27,879 - __main__ - INFO - Weight: 0.490
+2025-03-02 22:24:27,879 - __main__ - INFO - Price per kg: 199.94
+2025-03-02 22:24:27,880 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,880 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,880 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,881 - __main__ - INFO - 
+Product 5:
+2025-03-02 22:24:27,881 - __main__ - INFO - Name: Světničkové kuře polévková směs
+2025-03-02 22:24:27,881 - __main__ - INFO - Current Price: 22.86
+2025-03-02 22:24:27,882 - __main__ - INFO - Original Price: 27.54
+2025-03-02 22:24:27,882 - __main__ - INFO - Discount: -16
+2025-03-02 22:24:27,882 - __main__ - INFO - Weight: 0.440
+2025-03-02 22:24:27,882 - __main__ - INFO - Price per kg: 52.3
+2025-03-02 22:24:27,883 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,883 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,883 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,884 - __main__ - INFO - 
+Product 6:
+2025-03-02 22:24:27,884 - __main__ - INFO - Name: Sutcha Kuřecí medailonky v středomořské marinádě, 5 ks
+2025-03-02 22:24:27,885 - __main__ - INFO - Current Price: 100.1
+2025-03-02 22:24:27,885 - __main__ - INFO - Original Price: 154.0
+2025-03-02 22:24:27,885 - __main__ - INFO - Discount: -35
+2025-03-02 22:24:27,886 - __main__ - INFO - Weight: 0.510
+2025-03-02 22:24:27,886 - __main__ - INFO - Price per kg: 195.62
+2025-03-02 22:24:27,886 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,887 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,887 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,888 - __main__ - INFO - 
+Product 7:
+2025-03-02 22:24:27,888 - __main__ - INFO - Name: Sutcha Rump steak Wagyu z Japonska, A5+
+2025-03-02 22:24:27,889 - __main__ - INFO - Current Price: 550.8
+2025-03-02 22:24:27,889 - __main__ - INFO - Original Price: 1020.0
+2025-03-02 22:24:27,890 - __main__ - INFO - Discount: -46
+2025-03-02 22:24:27,890 - __main__ - INFO - Weight: 0.280
+2025-03-02 22:24:27,890 - __main__ - INFO - Price per kg: 1998.55
+2025-03-02 22:24:27,890 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,891 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,891 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,891 - __main__ - INFO - 
+Product 8:
+2025-03-02 22:24:27,892 - __main__ - INFO - Name: Katalánské Rustikální mini kuřátko
+2025-03-02 22:24:27,892 - __main__ - INFO - Current Price: 118.77
+2025-03-02 22:24:27,892 - __main__ - INFO - Original Price: 160.5
+2025-03-02 22:24:27,893 - __main__ - INFO - Discount: -26
+2025-03-02 22:24:27,893 - __main__ - INFO - Weight: 0.500
+2025-03-02 22:24:27,893 - __main__ - INFO - Price per kg: 237.54
+2025-03-02 22:24:27,894 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,894 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,894 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,894 - __main__ - INFO - 
+Product 9:
+2025-03-02 22:24:27,895 - __main__ - INFO - Name: Mladý kohout
+2025-03-02 22:24:27,895 - __main__ - INFO - Current Price: 324.0
+2025-03-02 22:24:27,895 - __main__ - INFO - Original Price: 540.0
+2025-03-02 22:24:27,895 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,896 - __main__ - INFO - Weight: 2.700
+2025-03-02 22:24:27,896 - __main__ - INFO - Price per kg: 120
+2025-03-02 22:24:27,896 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,896 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,897 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,897 - __main__ - INFO - 
+Product 10:
+2025-03-02 22:24:27,897 - __main__ - INFO - Name: Sutcha Prime Flank steak z Irska grass fed
+2025-03-02 22:24:27,898 - __main__ - INFO - Current Price: 121.77
+2025-03-02 22:24:27,898 - __main__ - INFO - Original Price: 173.97
+2025-03-02 22:24:27,898 - __main__ - INFO - Discount: -30
+2025-03-02 22:24:27,898 - __main__ - INFO - Weight: 0.300
+2025-03-02 22:24:27,899 - __main__ - INFO - Price per kg: 405.9
+2025-03-02 22:24:27,899 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,899 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,899 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,900 - __main__ - INFO - 
+Product 11:
+2025-03-02 22:24:27,900 - __main__ - INFO - Name: Maso Klouda Marinovaná vepřová kotleta ve směsi bylinek a sušených rajčat, 2 ks
+2025-03-02 22:24:27,900 - __main__ - INFO - Current Price: 79.1
+2025-03-02 22:24:27,901 - __main__ - INFO - Original Price: 113.0
+2025-03-02 22:24:27,901 - __main__ - INFO - Discount: -30
+2025-03-02 22:24:27,901 - __main__ - INFO - Weight: 0.400
+2025-03-02 22:24:27,901 - __main__ - INFO - Price per kg: 198.74
+2025-03-02 22:24:27,902 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,902 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,902 - __main__ - INFO - Processed expiry date '6. 3.' to 2025-03-06
+2025-03-02 22:24:27,903 - __main__ - INFO - 
+Product 12:
+2025-03-02 22:24:27,903 - __main__ - INFO - Name: Farma Výšovice Králičí hřbet s kostí
+2025-03-02 22:24:27,903 - __main__ - INFO - Current Price: 106.4
+2025-03-02 22:24:27,904 - __main__ - INFO - Original Price: 133.0
+2025-03-02 22:24:27,904 - __main__ - INFO - Discount: -20
+2025-03-02 22:24:27,904 - __main__ - INFO - Weight: 0.370
+2025-03-02 22:24:27,905 - __main__ - INFO - Price per kg: 289.6
+2025-03-02 22:24:27,905 - __main__ - INFO - Expiry Date: 2025-03-06
+2025-03-02 22:24:27,906 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,906 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,906 - __main__ - INFO - 
+Product 13:
+2025-03-02 22:24:27,907 - __main__ - INFO - Name: MASO! Hovězí vysoký roštěnec plátek
+2025-03-02 22:24:27,907 - __main__ - INFO - Current Price: 158.4
+2025-03-02 22:24:27,907 - __main__ - INFO - Original Price: 264.0
+2025-03-02 22:24:27,908 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,908 - __main__ - INFO - Weight: 0.480
+2025-03-02 22:24:27,908 - __main__ - INFO - Price per kg: 330.34
+2025-03-02 22:24:27,908 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,909 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,909 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,910 - __main__ - INFO - 
+Product 14:
+2025-03-02 22:24:27,910 - __main__ - INFO - Name: Amadori Mini špízy
+2025-03-02 22:24:27,910 - __main__ - INFO - Current Price: 96.6
+2025-03-02 22:24:27,911 - __main__ - INFO - Original Price: 161.0
+2025-03-02 22:24:27,911 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,911 - __main__ - INFO - Weight: 0.420
+2025-03-02 22:24:27,911 - __main__ - INFO - Price per kg: 228.53
+2025-03-02 22:24:27,912 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,912 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,912 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,912 - __main__ - INFO - 
+Product 15:
+2025-03-02 22:24:27,913 - __main__ - INFO - Name: Sutcha Prime Rump steak z Irska grass fed
+2025-03-02 22:24:27,913 - __main__ - INFO - Current Price: 117.6
+2025-03-02 22:24:27,913 - __main__ - INFO - Original Price: 168.0
+2025-03-02 22:24:27,914 - __main__ - INFO - Discount: -30
+2025-03-02 22:24:27,914 - __main__ - INFO - Weight: 0.280
+2025-03-02 22:24:27,914 - __main__ - INFO - Price per kg: 420
+2025-03-02 22:24:27,915 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,915 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,915 - __main__ - INFO - Processed expiry date '5. 3.' to 2025-03-05
+2025-03-02 22:24:27,915 - __main__ - INFO - 
+Product 16:
+2025-03-02 22:24:27,916 - __main__ - INFO - Name: Sutcha Chuck tender steak ze Severní Ameriky
+2025-03-02 22:24:27,916 - __main__ - INFO - Current Price: 96.76
+2025-03-02 22:24:27,916 - __main__ - INFO - Original Price: 164.0
+2025-03-02 22:24:27,917 - __main__ - INFO - Discount: -41
+2025-03-02 22:24:27,917 - __main__ - INFO - Weight: 0.280
+2025-03-02 22:24:27,918 - __main__ - INFO - Price per kg: 342.51
+2025-03-02 22:24:27,918 - __main__ - INFO - Expiry Date: 2025-03-05
+2025-03-02 22:24:27,918 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,918 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,919 - __main__ - INFO - 
+Product 17:
+2025-03-02 22:24:27,919 - __main__ - INFO - Name: Husí stehna chlazená (2 ks)
+2025-03-02 22:24:27,919 - __main__ - INFO - Current Price: 300.0
+2025-03-02 22:24:27,919 - __main__ - INFO - Original Price: 500.0
+2025-03-02 22:24:27,920 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,920 - __main__ - INFO - Weight: 0.830
+2025-03-02 22:24:27,920 - __main__ - INFO - Price per kg: 360.23
+2025-03-02 22:24:27,921 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,921 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,921 - __main__ - INFO - Processed expiry date '4. 3.' to 2025-03-04
+2025-03-02 22:24:27,922 - __main__ - INFO - 
+Product 18:
+2025-03-02 22:24:27,922 - __main__ - INFO - Name: Gurmet Hovězí tatarák
+2025-03-02 22:24:27,922 - __main__ - INFO - Current Price: 59.94
+2025-03-02 22:24:27,923 - __main__ - INFO - Original Price: 99.9
+2025-03-02 22:24:27,923 - __main__ - INFO - Discount: -40
+2025-03-02 22:24:27,923 - __main__ - INFO - Weight: 0.250
+2025-03-02 22:24:27,924 - __main__ - INFO - Price per kg: 239.76
+2025-03-02 22:24:27,924 - __main__ - INFO - Expiry Date: 2025-03-04
+2025-03-02 22:24:27,924 - __main__ - INFO - ------------------------
+2025-03-02 22:24:27,925 - __main__ - INFO - Updating database with 18 products
+2025-03-02 22:24:29,661 - __main__ - INFO - Database update completed

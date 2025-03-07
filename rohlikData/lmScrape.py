@@ -11,8 +11,25 @@ import time
 import traceback
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+
+
+
+# Set up more verbose logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Change from INFO to DEBUG
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('scraper_debug.log')  # Also save logs to a file
+    ]
+)
 logger = logging.getLogger(__name__)
+
+# Add these after your basic logging configuration
+logging.getLogger('playwright').setLevel(logging.DEBUG)
+logging.getLogger('agentql').setLevel(logging.DEBUG)
 
 # Add parent directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
