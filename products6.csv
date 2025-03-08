@@ -1,6 +1,0 @@
-id,date,datetime,name,current_price,original_price,discount,weight,price_per_kg,expiry_date,is_available
-44,2025-02-08,2025-02-08 12:00:14,MASO! Hovězí tatarák,92.00,115.00,20,0.250,361.64,2025-02-09,t
-45,2025-02-08,2025-02-08 12:00:14,Ecoproduct BIO Hovězí vysoký roštěnec,247.29,380.45,35,0.590,422.43,2025-02-13,t
-46,2025-02-08,2025-02-08 12:00:14,Vette & Verhaart Břitka atlantská čerstvá,28.48,189.90,85,0.500,56.96,2025-02-09,t
-47,2025-02-08,2025-02-08 12:00:14,Toro Hlavečník Moravská pečeně,128.81,184.02,30,0.610,209.93,2025-02-10,t
-48,2025-02-08,2025-02-08 12:00:14,Vepřová krkovice z mangalice,211.50,423.00,50,0.480,440.63,2025-02-10,t

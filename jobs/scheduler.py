@@ -96,15 +96,15 @@ async def init_scheduler():
     scheduler.add_job(
         scheduled_scraping,
         'cron',
-        minute='*/30',
-        next_run_time=datetime.now() + timedelta(minutes=30)  # Start after 30 mins
+        hour='*/12',
+        next_run_time=datetime.now() + timedelta(minutes=12)  # Start after 30 mins
     )
     
     scheduler.add_job(
         scheduled_recipe_generation,
         'cron',
-        hour='*/2',
-        next_run_time=datetime.now() + timedelta(hours=2)  # Start after 2 hours
+        hour='*/12',
+        next_run_time=datetime.now() + timedelta(hours=12) + timedelta(minutes=3)  # Start after 2 hours
     )
     
     scheduler.start()

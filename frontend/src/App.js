@@ -137,7 +137,6 @@ function App() {
                 <TableCell>Recipe Name</TableCell>
                 <TableCell align="right">Cooking Time</TableCell>
                 <TableCell align="right">Servings</TableCell>
-                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -148,11 +147,6 @@ function App() {
                   <TableCell>{recipe.recipe_name}</TableCell>
                   <TableCell align="right">{`${recipe.cooking_time} mins`}</TableCell>
                   <TableCell align="right">{recipe.servings}</TableCell>
-                  <TableCell>
-                    <a href={recipe.recipe_url} target="_blank" rel="noopener noreferrer">
-                      View Recipe
-                    </a>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -1,16 +1,26 @@
 # Meat Deals Recipe Finder 🥩
 
-A full-stack application that tracks discounted meat products from online grocery store Rohlik and suggests matching recipes. The system automatically scrapes product data, translates descriptions using OpenAI, and finds recipe recommendations through Spoonacular API.
+A full-stack application that monitors discounted meat products from Rohlik (Czech online grocery store) and generates matching recipes using AI. The system automatically scrapes product data every 12 hours and suggests recipes based on the available discounted items.
+
+## Screenshots
+
+### Product Overview
+![Product Overview](docs/image.png)
+
+### Recipe Details
+![Recipe Details](docs/image2.png)
 
 ## Features
 
-- Automated scraping of discounted meat products using AGENTQL
-- Recipe recommendations based on available discounted products
+- Automated scraping of discounted meat products from Rohlik
+- AI-powered recipe generation using OpenAI API
 - Translation services powered by OpenAI API
 - Interactive dashboard built with React
 - RESTful API endpoints using FastAPI
-- Scheduled data collection and updates
+- Scheduled data collection and updates (every 12 hours)
 - Persistent storage using PostgreSQL
+- Containerized deployment using Docker Compose
+- Automated CI/CD pipeline for AWS EC2 deployment
 
 ## Architecture
 
@@ -18,21 +28,63 @@ A full-stack application that tracks discounted meat products from online grocer
 - **Frontend**: React
 - **Database**: PostgreSQL
 - **APIs**: 
-  - AGENTQL for web scraping
-  - OpenAI API for translations
-  - Spoonacular API for recipe recommendations
+  - OpenAI API for recipe generation and translations
+- **Deployment**: 
+  - Docker Compose for local development
+  - GitHub Actions CI/CD pipeline for AWS EC2 deployment
 
 ## Prerequisites
 
-- Python 3.8+
-- Node.js 14+
-- PostgreSQL
+- Docker and Docker Compose
 - Required API keys:
   ```
   OPENAI_API_KEY=your_openai_key
-  AGENTQL_API_KEY=your_agentql_key
-  SPOONACULAR_API_KEY=your_spoonacular_key
   ```
+
+## Deployment Options
+
+### Local Development with Docker Compose
+
+1. Clone the repository:
+   ```bash
+   git clone [repo-url]
+   cd meat-deals-recipe-finder
+   ```
+
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your OpenAI API key and database configuration
+   ```
+
+3. Start the application:
+   ```bash
+   docker compose up
+   ```
+
+### AWS EC2 Deployment
+
+The application includes a comprehensive GitHub Actions workflow for automated deployment to AWS EC2. The workflow:
+
+- Builds and pushes Docker images to Amazon ECR
+- Performs network diagnostics and SSH connectivity checks
+- Deploys the application using Docker Compose
+- Sets up environment variables securely
+- Includes error handling and logging
+
+Required GitHub Secrets for AWS deployment:
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+EC2_HOST
+EC2_SSH_KEY
+DB_NAME
+DB_USER
+DB_PASSWORD
+DB_HOST
+DB_PORT
+OPENAI_API_KEY
+```
 
 ## Installation
 
@@ -92,11 +144,5 @@ Create a `.env` file in the root directory with the following variables:
 # API Keys
 OPENAI_API_KEY=your_openai_key
 AGENTQL_API_KEY=your_agentql_key
-SPOONACULAR_API_KEY=your_spoonacular_key
 
 
-
-
-
-
-I tried to do custom search serper call and process with beuatiful soup and llm to find czech recipe but difficult to get good results.
